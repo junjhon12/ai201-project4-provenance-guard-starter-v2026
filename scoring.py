@@ -49,8 +49,9 @@ def combine_signals(model_score: float, style_score: float) -> float:
       - Milestone 4 asks you to find a case where your two signals split and
         write it down. That case is what this rule exists to handle.
 
-    The weights in config.py are placeholders. Change them, or ignore them and
-    write a different rule.
+    The configured weights are equal (0.5 each), so disagreement pulls the
+    combined score toward the middle instead of allowing either signal to
+    decide alone.
     """
     # TODO: replace this
     return (

@@ -18,7 +18,7 @@ doesn't, it's the service itself.
 Routes:
 
     POST /ping        the worked example. Already works. Don't edit it
-    POST /submit      Milestone 3 implemented; continue in Milestones 4 and 5
+    POST /submit      Milestone 4 signals and score; label deferred to 5
     POST /appeal      ← YOU BUILD THIS (Milestone 5)
     GET  /log         the audit log. Already works
     GET  /health      is the service up, and is the model loaded
@@ -31,6 +31,8 @@ from flask import Flask, jsonify, request
 import audit
 import config
 import detector
+import scoring
+import stylometry
 
 app = Flask(__name__)
 
@@ -149,21 +151,21 @@ def health():
     })
 
 
-# ── SUBMISSION ROUTE — MILESTONE 3 ────────────────────────────────────────────
+# ── SUBMISSION ROUTE — MILESTONE 4 ────────────────────────────────────────────
 
 @app.post("/submit")
 # @limiter.limit(f"{config.RATE_LIMIT_PER_MINUTE}/minute;{config.RATE_LIMIT_PER_DAY}/day")
 def submit():
     """
-    Score text with signal one and log the result. Confidence and label remain
-    placeholders until their later milestones.
+    Score text with both signals and log the result. Confidence and label remain
+    placeholders until Milestone 5.
 
     Expects JSON:
         {"text": "...", "creator_id": "..."}
 
     The final response schema will include:
         {"content_id": "...", "guess": "...", "confidence": 0.0, "label": "...",
-         "model_score": 0.0, "style_score": 0.0}
+         "model_score": 0.0, "style_score": 0.0, "combined_score": 0.0}
 
     ⚠️ **Both signal scores go in the response, not just the log.** Unit 8's
     `run_attacks.py` and `run_eval.py` read `model_score` and `style_score`
@@ -247,18 +249,24 @@ def submit():
             "Text is too short to score; provide a few sentences.",
         )
 
+    style_score = stylometry.style_signal(text)
+    combined_score = scoring.combine_signals(model_score, style_score)
     content_id = str(uuid.uuid4())
     audit.log_decision(
         content_id=content_id,
         creator_id=creator_id,
         guess=None,
         model_score=model_score,
+        style_score=style_score,
+        combined_score=combined_score,
         label="Pending Milestone 5: no label assigned yet.",
         status="decided",
     )
     return jsonify({
         "content_id": content_id,
         "model_score": model_score,
+        "style_score": style_score,
+        "combined_score": combined_score,
         "confidence": 0.0,
         "label": "Pending Milestone 5: no label assigned yet.",
     })

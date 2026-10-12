@@ -58,10 +58,10 @@
    label; the client displays that label. A writer can send the `content_id` and
    their reasoning to `POST /appeal`, which records the appeal for review.
 
-Milestone 3 implements `POST /submit` with only the model signal: it returns a
-`content_id` and `model_score`, while confidence and label remain explicit
-placeholders. The style signal, combined score, final label, and appeal route
-are later milestones; the full flow above describes that planned behavior.
+Milestone 4 implements both signals and the combined score in `POST /submit`.
+The route returns and logs the `model_score`, `style_score`, and
+`combined_score`; confidence and label remain Milestone 3 placeholders until
+Milestone 5. The full flow above describes the eventual label and appeal path.
 
 ### Endpoint contracts
 
@@ -84,6 +84,8 @@ Requests use a JSON object with `Content-Type: application/json`.
 | `confidence` | number | Milestone 3 placeholder (`0.0`); not a confidence estimate. |
 | `label` | string | Milestone 3 placeholder stating that labeling is not implemented yet. |
 | `model_score` | number, 0–1 | Predictability-based model signal; higher means more AI-like. |
+| `style_score` | number, 0–1 | Shape-based style signal; higher means more AI-like. |
+| `combined_score` | number, 0–1 | Equal-weight average of `model_score` and `style_score`. |
 
 Missing text returns `400` with “No text provided.”, empty text returns `400`
 with “Input is empty.”, and text longer than 10,000 characters returns `400`
@@ -91,8 +93,8 @@ with “Input exceeds the limit of 10,000 characters.” Other malformed or
 invalid input and text too short to score also return `400` with a stable error
 code and explanation. If the local detector cannot load, the route returns
 `503` rather than manufacturing a score. Rejections are recorded separately;
-they do not create a decision entry. `guess`, `style_score`, combined score,
-and final confidence/label behavior are deferred to later milestones.
+they do not create a decision entry. `guess` and final confidence/label
+behavior are deferred to Milestone 5.
 
 #### `POST /appeal`
 
@@ -120,16 +122,16 @@ decision to associate the appeal with its `creator_id`.
 
 Consider a real writer who uses plain, conventional sentences. Predictable
 wording can give them a high model score even though they wrote the work. For
-an illustrative trace, suppose the model score is `0.90`; while stylometry is
-still its starter stub, its score is `0.50`. With the starter's equal weights,
+an illustrative trace, suppose the model score is `0.90` and the style score
+is `0.50`. With equal weights,
 the combined score is `(0.5 × 0.90) + (0.5 × 0.50) = 0.70`. That is above the
 current `AI_THRESHOLD` of `0.65`, so the planned label is `ai` and the reader
 would see: “Our signals suggest this text may be AI-written. This is an
 estimate, not proof.”
 
-Those scores are an example, not an observed model run: the submit route is not
-built yet, stylometry is a stub, and these weights and thresholds are
-placeholders to be tested and revisited. The harm is still clear: a human
+Those scores are an example, not an observed model run; the weights and
+thresholds remain settings to be revisited after calibration. The harm is
+still clear: a human
 writer receives an AI accusation from a signal that measures predictability,
 not authorship. The response must include a `content_id`; the writer can submit
 it with their reasoning to `/appeal`. The service records the appeal as
@@ -168,6 +170,16 @@ surprising. Predictability is not proof of AI authorship.
 variation, unique words relative to total words, and punctuation density. It
 looks at the text's form, not its meaning.
 
+**How it is scored:** Sentence-length spread is the sample standard deviation
+of sentence word counts divided by their mean (coefficient of variation);
+fewer than two usable sentences give a neutral spread component of `0.50`.
+Vocabulary repetition is `1 - type_token_ratio`. Punctuation density is
+Unicode punctuation characters divided by all characters; its component is
+`1 - min(density / 0.10, 1.0)`. `style_signal` is the equal average of these
+three components, rounded to four decimals. Text with no words receives the
+neutral style score `0.50`. These directions are rough heuristics, not
+authorship evidence; in particular, type-token ratio is sensitive to length.
+
 **Why that might differ between human and AI writing:** Generated prose can
 settle into similarly sized sentences, repeat familiar vocabulary, and use
 punctuation in regular ways. Human writing may be more uneven and idiosyncratic.
@@ -182,22 +194,75 @@ surrounding text. Its vocabulary ratio also changes with text length.
 <!-- Write the rule in words, then give the numbers. What happens when the two
      signals disagree? -->
 
-**The rule:**
+**The rule:** Take an equal-weight average of the model and style scores.
+Disagreement pulls the result toward `0.50`; it does not let either signal
+alone make the decision.
 
-**The numbers:**
+**The numbers:** `WEIGHT_MODEL_SIGNAL = 0.50` and
+`WEIGHT_STYLE_SIGNAL = 0.50` in `config.py`. For example, scores `0.90` and
+`0.10` combine to `0.50`. The separate label-band thresholds remain
+`HUMAN_THRESHOLD = 0.35` and `AI_THRESHOLD = 0.65` in `config.py`.
 
 **Where it lives:** `scoring.py::combine_signals`
 
 <!-- ⚠️ The grader checks your code against that line. If your rule lives
      somewhere else, say where. -->
 
-**A case where my two signals split, and what my rule does with it:** Plain,
-conventional human writing could be highly predictable to the model (high
-model score) while having uneven sentence lengths or punctuation (lower style
-score). The planned equal-weight average would temper either signal with the
-other; if they differ sharply, the result moves toward the middle and should
-land in `unsure` rather than treating either signal as proof. This needs to be
-checked with actual calibration inputs once both signals are implemented.
+**A case where my two signals split, and what my rule does with it:** For the
+lightly edited AI sample, the model score was `0.7467` (above the `0.65` AI
+threshold), while the style score was `0.5252` (below it). The equal average,
+`0.6360`, lands in the unsure band instead of treating the model score alone
+as proof.
+
+### Calibration run
+
+Run the same four text types through `detector.model_signal` and
+`stylometry.style_signal`, then calculate the configured average. The first
+three are the shared comparison set (AI-like, human-style, and lightly edited
+AI-like); formal human-style writing is the fourth stress case. The human-style
+examples are constructed controls, not independently verified human
+authorship. These scores are calibration observations, not a validated
+detector benchmark.
+
+| Input | Model score | Style score | Combined score | Observation |
+|---|---:|---:|---:|---|
+| Clearly AI | 0.8012 | 0.5626 | 0.6819 | Both point above the AI threshold after averaging. |
+| Human-style control | 0.3209 | 0.3740 | 0.3475 | Both are low; combined score is just below the human threshold. |
+| Lightly edited AI | 0.7467 | 0.5252 | 0.6360 | Model alone crosses the AI threshold; style and combined scores do not. |
+| Formal human-style | 0.5705 | 0.6136 | 0.5920 | Both lean high, but the average remains unsure. |
+
+**Where the signals agree or split:** On the clearly AI and human-style
+examples, both signals land on the same side of `0.50`. The lightly edited AI
+sample is the split case: the model score is above `AI_THRESHOLD = 0.65`, while
+the style score is below it. The formal human-style sample is also a false-
+positive risk: both scores are above `0.50`.
+
+**What the disagreement case demonstrates:** Equal weighting moves the
+lightly edited AI sample from a model-only AI result (`0.7467`) to an unsure
+combined result (`0.6360`). The style signal can temper an accusation, but it
+can also let edited AI text avoid a high-confidence AI label.
+
+**Calibration inputs** (run verbatim to reproduce the table):
+
+- Clearly AI: “Artificial intelligence is transforming the way organizations
+  operate. It enables businesses to automate repetitive tasks, analyze large
+  amounts of data, and improve decision-making. As these technologies continue
+  to advance, organizations must consider both their opportunities and their
+  potential challenges. A thoughtful approach can help ensure that AI is used
+  effectively and responsibly.”
+- Human-style control: “Oh, what a morning! I missed the bus. Again. A cyclist
+  splashed straight through a puddle; my coffee went flying, and somewhere in
+  all that chaos a tiny dog stole half my muffin. Honestly, I laughed—there
+  wasn't much else to do. By noon, everything had somehow worked out.”
+- Lightly edited AI: “Many people are looking for ways to make their daily
+  routines more efficient. A clear plan helps you stay focused, and it can
+  also save time. In the end, small changes usually make the biggest
+  difference—at least, that is what I keep telling myself.”
+- Formal human-style: “The committee reviewed the proposed schedule and
+  considered the effects on staffing, cost, and access. Although the revised
+  plan requires additional preparation, it gives each department more time to
+  respond. Members agreed that the change should be evaluated after the first
+  quarter, when reliable figures are available.”
 
 
 
@@ -227,12 +292,15 @@ checked with actual calibration inputs once both signals are implemented.
 
 ## Sample Run
 
-<!-- Paste the Milestone 3 submission and log requests and responses here. -->
+<!-- Paste the submission and log requests and responses here. -->
 
-**A submission (Milestone 3 — model signal only)**
+**A submission (Milestone 4 — both signals and the combined score)**
+
+The request below is the sample payload; the response and matching log entry
+were captured from an isolated Flask test-client run with temporary log storage.
 
 ```powershell
-PS> '{"text":"Last Saturday I missed the bus, so I walked to the corner store instead. It was raining hard enough that my shoes squeaked when I went inside. The cashier laughed when I shook water off my jacket, and I bought a coffee I did not really need. I got home later than planned, but the walk ended up being the nicest part of my morning.","creator_id":"milestone3-sample"}' | curl.exe -i http://127.0.0.1:5000/submit -H 'Content-Type: application/json' --data-binary '@-'
+PS> '{"text":"Last Saturday I missed the bus, so I walked to the corner store instead. It was raining hard enough that my shoes squeaked when I went inside. The cashier laughed when I shook water off my jacket, and I bought a coffee I did not really need. I got home later than planned, but the walk ended up being the nicest part of my morning.","creator_id":"milestone4-sample"}' | curl.exe -i http://127.0.0.1:5000/submit -H 'Content-Type: application/json' --data-binary '@-'
 ```
 
 ```http
@@ -241,10 +309,12 @@ HTTP/1.1 200 OK
 
 ```json
 {
+  "combined_score": 0.66315,
   "confidence": 0.0,
-  "content_id": "a4f0dc9c-a8ab-453b-8888-c04c9b659bf4",
+  "content_id": "33f29453-fc61-4d45-bd63-0149990bb9a8",
   "label": "Pending Milestone 5: no label assigned yet.",
-  "model_score": 0.7198
+  "model_score": 0.7198,
+  "style_score": 0.6065
 }
 ```
 
@@ -263,15 +333,15 @@ HTTP/1.1 200 OK
   "count": 1,
   "entries": [
     {
-      "combined_score": null,
-      "content_id": "a4f0dc9c-a8ab-453b-8888-c04c9b659bf4",
-      "creator_id": "milestone3-sample",
+      "combined_score": 0.66315,
+      "content_id": "33f29453-fc61-4d45-bd63-0149990bb9a8",
+      "creator_id": "milestone4-sample",
       "guess": null,
       "label": "Pending Milestone 5: no label assigned yet.",
       "model_score": 0.7198,
       "status": "decided",
-      "style_score": null,
-      "timestamp": "2026-10-12T21:49:04+00:00"
+      "style_score": 0.6065,
+      "timestamp": "2026-10-12T21:56:08+00:00"
     }
   ]
 }
