@@ -18,8 +18,8 @@ doesn't, it's the service itself.
 Routes:
 
     POST /ping        the worked example. Already works. Don't edit it
-    POST /submit      Milestone 4 signals and score; label deferred to 5
-    POST /appeal      ← YOU BUILD THIS (Milestone 5)
+    POST /submit      score text with both signals and return a reader-facing label
+    POST /appeal      record a writer's request for review
     GET  /log         the audit log. Already works
     GET  /health      is the service up, and is the model loaded
 """
@@ -151,14 +151,12 @@ def health():
     })
 
 
-# ── SUBMISSION ROUTE — MILESTONE 4 ────────────────────────────────────────────
+# ── SUBMISSION ROUTE ──────────────────────────────────────────────────────────
 
 @app.post("/submit")
 # @limiter.limit(f"{config.RATE_LIMIT_PER_MINUTE}/minute;{config.RATE_LIMIT_PER_DAY}/day")
 def submit():
-    """
-    Score text with both signals and log the result. Confidence and label remain
-    placeholders until Milestone 5.
+    """Score text with both signals, assign a label, and log the decision.
 
     Expects JSON:
         {"text": "...", "creator_id": "..."}
@@ -183,7 +181,7 @@ def submit():
          add any logic at all.
       2. Then pull `text` and `creator_id` out of the payload.
       3. Then call ONE signal — `detector.model_signal(text)` — and put the
-         real number in. Leave confidence and label as placeholders.
+         real number in.
       4. Log every submission with `audit.log_decision(...)`. The content_id
          matters: `/appeal` needs it, and a student who skips it rebuilds this
          whole flow later.
@@ -194,7 +192,7 @@ def submit():
       7. Log BOTH signal scores alongside the combined one, and put them in the
          response too. Next unit you can't diagnose anything without them.
 
-    **Milestone 5 — the label.**
+    **The label.**
       8. `scoring.score_to_label(...)` and put the real label in the response.
 
     ─────────────────────────────────────────────────────────────────────────
@@ -251,31 +249,32 @@ def submit():
 
     style_score = stylometry.style_signal(text)
     combined_score = scoring.combine_signals(model_score, style_score)
+    guess, label = scoring.score_to_label(combined_score)
     content_id = str(uuid.uuid4())
     audit.log_decision(
         content_id=content_id,
         creator_id=creator_id,
-        guess=None,
+        guess=guess,
         model_score=model_score,
         style_score=style_score,
         combined_score=combined_score,
-        label="Pending Milestone 5: no label assigned yet.",
+        label=label,
         status="decided",
     )
     return jsonify({
         "content_id": content_id,
+        "guess": guess,
         "model_score": model_score,
         "style_score": style_score,
         "combined_score": combined_score,
         "confidence": 0.0,
-        "label": "Pending Milestone 5: no label assigned yet.",
+        "label": label,
     })
 
 
 @app.post("/appeal")
 def appeal():
-    """
-    A writer says you got it wrong. ← TODO — Milestone 5
+    """Record a writer's request to have a decision reviewed.
 
     Expects JSON:
         {"content_id": "...", "reasoning": "..."}
@@ -292,14 +291,52 @@ def appeal():
     to the person on the other end. It's the only thing standing between a
     wrong accusation and nothing at all.
     """
-    payload = request.get_json(silent=True) or {}
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        return jsonify({
+            "error": "invalid_json",
+            "message": "Request body must be a JSON object.",
+        }), 400
 
-    # TODO: delete this and build the route.
+    content_id = payload.get("content_id")
+    if not isinstance(content_id, str) or not content_id.strip():
+        return jsonify({
+            "error": "invalid_content_id",
+            "message": "A non-empty content_id is required.",
+        }), 400
+    content_id = content_id.strip()
+
+    reasoning = payload.get("reasoning")
+    if not isinstance(reasoning, str) or not reasoning.strip():
+        return jsonify({
+            "error": "invalid_reasoning",
+            "message": "A non-empty reasoning string is required.",
+        }), 400
+
+    original = next(
+        (
+            entry
+            for entry in audit.entries_for(content_id)
+            if entry.get("status") == "decided" and entry.get("event") != "appeal"
+        ),
+        None,
+    )
+    if original is None:
+        return jsonify({
+            "error": "unknown_content_id",
+            "message": "No decision was found for this content_id.",
+        }), 404
+
+    audit.log_appeal(
+        content_id=content_id,
+        creator_id=original["creator_id"],
+        reasoning=reasoning.strip(),
+    )
     return jsonify({
-        "error": "not_implemented",
-        "message": "POST /appeal isn't built yet — see the TODO in app.py.",
-        "you_sent": payload,
-    }), 501
+        "content_id": content_id,
+        "status": "under_review",
+        "message": "Your appeal has been received for review.",
+    })
 
 
 # ── Already works ─────────────────────────────────────────────────────────────

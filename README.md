@@ -58,10 +58,11 @@
    label; the client displays that label. A writer can send the `content_id` and
    their reasoning to `POST /appeal`, which records the appeal for review.
 
-Milestone 4 implements both signals and the combined score in `POST /submit`.
-The route returns and logs the `model_score`, `style_score`, and
-`combined_score`; confidence and label remain Milestone 3 placeholders until
-Milestone 5. The full flow above describes the eventual label and appeal path.
+`POST /submit` returns and logs both signal scores, the combined score, the
+machine-readable guess, and the reader-facing label. `confidence` remains
+`0.0` as a placeholder; it is not a confidence estimate. A writer can appeal a
+decision through `POST /appeal`, which appends an `under_review` entry without
+replacing the original decision.
 
 ### Endpoint contracts
 
@@ -81,8 +82,9 @@ Requests use a JSON object with `Content-Type: application/json`.
 | Field | Type | Meaning |
 |---|---|---|
 | `content_id` | string | Unique identifier for this submission, returned for future appeals. |
-| `confidence` | number | Milestone 3 placeholder (`0.0`); not a confidence estimate. |
-| `label` | string | Milestone 3 placeholder stating that labeling is not implemented yet. |
+| `guess` | string | Machine-readable category: `human`, `unsure`, or `ai`. |
+| `confidence` | number | Placeholder (`0.0`); not a confidence estimate. |
+| `label` | string | Full reader-facing sentence for the selected category. |
 | `model_score` | number, 0–1 | Predictability-based model signal; higher means more AI-like. |
 | `style_score` | number, 0–1 | Shape-based style signal; higher means more AI-like. |
 | `combined_score` | number, 0–1 | Equal-weight average of `model_score` and `style_score`. |
@@ -93,8 +95,8 @@ with “Input exceeds the limit of 10,000 characters.” Other malformed or
 invalid input and text too short to score also return `400` with a stable error
 code and explanation. If the local detector cannot load, the route returns
 `503` rather than manufacturing a score. Rejections are recorded separately;
-they do not create a decision entry. `guess` and final confidence/label
-behavior are deferred to Milestone 5.
+they do not create a decision entry. The `guess` and reader-facing `label` are
+populated for every successful submission.
 
 #### `POST /appeal`
 
@@ -125,9 +127,9 @@ wording can give them a high model score even though they wrote the work. For
 an illustrative trace, suppose the model score is `0.90` and the style score
 is `0.50`. With equal weights,
 the combined score is `(0.5 × 0.90) + (0.5 × 0.50) = 0.70`. That is above the
-current `AI_THRESHOLD` of `0.65`, so the planned label is `ai` and the reader
-would see: “Our signals suggest this text may be AI-written. This is an
-estimate, not proof.”
+current `AI_THRESHOLD` of `0.65`, so the label is `ai` and the reader
+sees: “Our signals suggest this text may have been written with AI, but this
+is not proof.”
 
 Those scores are an example, not an observed model run; the weights and
 thresholds remain settings to be revisited after calibration. The harm is
@@ -277,14 +279,25 @@ can also let edited AI text avoid a high-confidence AI label.
 
 | Label | Score range | The exact text a reader sees |
 |---|---|---|
-| high-confidence human |  |  |
-| unsure |  |  |
-| high-confidence AI |  |  |
+| high-confidence human | 0.00 ≤ score ≤ 0.35 | Our signals suggest this text was probably written by a person. |
+| unsure | 0.35 < score < 0.65 | We can't tell from these signals whether this text was written by a person or with AI. |
+| high-confidence AI | 0.65 ≤ score ≤ 1.00 | Our signals suggest this text may have been written with AI, but this is not proof. |
 
 **Why I worded the "unsure" one this way:**
-<!-- It's the hardest of the three. It has to admit uncertainty without
-     sounding like an accusation, because the person reading it may well have
-     written every word themselves. -->
+It says plainly that the signals cannot tell, and it does not accuse the writer
+of using AI. That matters because a person may have written every word
+themselves.
+
+**Live-model reachability check**
+
+These are actual `POST /submit` results from the local model using the
+calibration examples above. Each score produced the category shown:
+
+| Example | Combined score | Guess |
+|---|---:|---|
+| Human-style control | 0.34745 | `human` |
+| Lightly edited AI | 0.63595 | `unsure` |
+| Clearly AI | 0.68190 | `ai` |
 
 
 
@@ -292,56 +305,80 @@ can also let edited AI text avoid a high-confidence AI label.
 
 ## Sample Run
 
-<!-- Paste the submission and log requests and responses here. -->
+The following submission, appeal, and log lookup were captured with the live
+local model through a Flask test client and temporary audit-log storage. The
+`content_id` was returned by the submission immediately before the appeal.
 
-**A submission (Milestone 4 — both signals and the combined score)**
+**A submission**
 
-The request below is the sample payload; the response and matching log entry
-were captured from an isolated Flask test-client run with temporary log storage.
-
-```powershell
-PS> '{"text":"Last Saturday I missed the bus, so I walked to the corner store instead. It was raining hard enough that my shoes squeaked when I went inside. The cashier laughed when I shook water off my jacket, and I bought a coffee I did not really need. I got home later than planned, but the walk ended up being the nicest part of my morning.","creator_id":"milestone4-sample"}' | curl.exe -i http://127.0.0.1:5000/submit -H 'Content-Type: application/json' --data-binary '@-'
-```
-
-```http
-HTTP/1.1 200 OK
-```
+Request to `POST /submit`:
 
 ```json
 {
-  "combined_score": 0.66315,
-  "confidence": 0.0,
-  "content_id": "33f29453-fc61-4d45-bd63-0149990bb9a8",
-  "label": "Pending Milestone 5: no label assigned yet.",
-  "model_score": 0.7198,
-  "style_score": 0.6065
+  "text": "Oh, what a morning! I missed the bus. Again. A cyclist splashed straight through a puddle; my coffee went flying, and somewhere in all that chaos a tiny dog stole half my muffin. Honestly, I laughed—there wasn't much else to do. By noon, everything had somehow worked out.",
+  "creator_id": "milestone5-sample"
 }
 ```
 
-**What the log shows afterwards**
-
-```powershell
-PS> curl.exe -i "http://127.0.0.1:5000/log?limit=1"
-```
-
-```http
-HTTP/1.1 200 OK
-```
+Response (`200`):
 
 ```json
 {
-  "count": 1,
+  "combined_score": 0.34745000000000004,
+  "confidence": 0.0,
+  "content_id": "51926f77-a8f5-46b8-8c6b-6d0e30f5b2b5",
+  "guess": "human",
+  "label": "Our signals suggest this text was probably written by a person.",
+  "model_score": 0.3209,
+  "style_score": 0.374
+}
+```
+
+**An appeal for that submission**
+
+Request to `POST /appeal`:
+
+```json
+{
+  "content_id": "51926f77-a8f5-46b8-8c6b-6d0e30f5b2b5",
+  "reasoning": "I wrote this text myself and would like a person to review the decision."
+}
+```
+
+Response (`200`):
+
+```json
+{
+  "content_id": "51926f77-a8f5-46b8-8c6b-6d0e30f5b2b5",
+  "message": "Your appeal has been received for review.",
+  "status": "under_review"
+}
+```
+
+**`GET /log?limit=2` afterwards** (`200`):
+
+```json
+{
+  "count": 2,
   "entries": [
     {
-      "combined_score": 0.66315,
-      "content_id": "33f29453-fc61-4d45-bd63-0149990bb9a8",
-      "creator_id": "milestone4-sample",
-      "guess": null,
-      "label": "Pending Milestone 5: no label assigned yet.",
-      "model_score": 0.7198,
+      "combined_score": 0.34745000000000004,
+      "content_id": "51926f77-a8f5-46b8-8c6b-6d0e30f5b2b5",
+      "creator_id": "milestone5-sample",
+      "guess": "human",
+      "label": "Our signals suggest this text was probably written by a person.",
+      "model_score": 0.3209,
       "status": "decided",
-      "style_score": 0.6065,
-      "timestamp": "2026-10-12T21:56:08+00:00"
+      "style_score": 0.374,
+      "timestamp": "2026-10-12T23:14:12+00:00"
+    },
+    {
+      "content_id": "51926f77-a8f5-46b8-8c6b-6d0e30f5b2b5",
+      "creator_id": "milestone5-sample",
+      "event": "appeal",
+      "reasoning": "I wrote this text myself and would like a person to review the decision.",
+      "status": "under_review",
+      "timestamp": "2026-10-12T23:14:12+00:00"
     }
   ]
 }
