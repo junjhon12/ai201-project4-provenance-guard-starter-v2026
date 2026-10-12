@@ -44,60 +44,65 @@ Two things worth knowing before you pick numbers:
 ---
 ## 1.
 
-<!-- Your criterion. It must name a number. -->
+**Criterion — False positives:** Of 100 human-written samples, no more than 20 may be labeled True (false-positive rate ≤20%). If “True” means AI-generated, this means at least 80 must be labeled False.
 
 
 
 **Why this target:**
-
-
+Human-written text should rarely be misclassified as machine-generated. A 20% ceiling keeps false accusations low and makes the label trustworthy. If your original 80% figure was intentional, note that it allows a very high false-positive rate and should be tightened.
 
 ---
 
 ## 2.
 
-<!-- Your criterion. -->
+**Criterion — Factuality:** In 100 outputs, at least 85% of verifiable factual claims must be supported by evidence—such as a citation, source, or reproducible check. Unsupported claims must be labeled uncertain or removed.
 
 
 
 **Why this target:**
-
+85% is a practical minimum for trust. Below this, factual errors become common enough to undermine decisions.
 
 
 ---
 
 ## 3.
 
-<!-- Your criterion. -->
+**Criterion — Bad input:** For missing text, empty text, and text over the size limit (e.g., >X characters or words), the service must reject the input with a specific error and must not produce a normal answer.
 
+Missing text: “No text provided.”
+
+Empty text: “Input is empty.”
+
+Oversized text: “Input exceeds the limit of X.”
 
 
 **Why this target:**
-
+Boundary cases must fail safely and predictably so users know why no output was produced and tests can verify behavior.
 
 
 ---
 
 ## 4.
 
-<!-- Your criterion. -->
-
+**Criterion — Fake evidence:** Of 50 cases containing fake evidence—fabricated citations, nonexistent sources, or quotes not present in the cited source—the system must flag or refuse to use that evidence in at least 95% of cases.
 
 
 **Why this target:**
-
+Fabricated evidence is a high-severity failure. A 95% target makes it rare and measurable; the 5% tolerance acknowledges hard cases without normalizing the behavior.
 
 
 ---
 
 ## 5.
 
-<!-- Your criterion. -->
-
+**Criterion — Explanation quality:**  In 30 tests, at least 80% of readers must be able to state, after reading the system’s explanation:
+what the system decided,
+the main reason for that decision, and
+what evidence or condition would change it.
 
 
 **Why this target:**
-
+An explanation is only useful if readers can understand the decision and know what to do next. This measures comprehension and actionability, not just satisfaction.
 
 
 ---
