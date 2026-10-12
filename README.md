@@ -390,15 +390,26 @@ Response (`200`):
 
 **Moment 1**
 
-- *What I asked for:*
-- *What came back:*
-- *What I changed:*
+- *What I asked for:* I asked AI to compare my Unit 7 submission checklist
+  with the repository before making changes.
+- *What came back:* It found that the submission flow, combining rule, label
+  variants, and sample run were already documented, while this AI-use section
+  still had placeholders. It also noticed that the separate Unit 8 sections
+  were still blank.
+- *What I changed:* I left the completed Unit 7 write-ups intact, filled in
+  the missing AI-use section, and kept the Unit 8 template for its own
+  milestone.
 
 **Moment 2**
 
-- *What I asked for:*
-- *What came back:*
-- *What I changed:*
+- *What I asked for:* I asked AI to check the documented combining rule
+  against the scoring code and calibration example.
+- *What came back:* It verified that `scoring.py::combine_signals` takes the
+  equal-weight average configured in `config.py`; the model/style scores
+  `0.7467` and `0.5252` therefore combine to `0.6360`, in the unsure band.
+- *What I changed:* I kept the README's code reference, weights, thresholds,
+  and calibration figures aligned with the implementation, and described the
+  result as uncertainty rather than proof of authorship.
 
 <!-- ═══════════════════════ UNIT 8 — THE TEST ═══════════════════════ -->
 
