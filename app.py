@@ -18,7 +18,7 @@ doesn't, it's the service itself.
 Routes:
 
     POST /ping        the worked example. Already works. Don't edit it
-    POST /submit      ← YOU BUILD THIS (Milestone 3, 4, 5)
+    POST /submit      Milestone 3 implemented; continue in Milestones 4 and 5
     POST /appeal      ← YOU BUILD THIS (Milestone 5)
     GET  /log         the audit log. Already works
     GET  /health      is the service up, and is the model loaded
@@ -30,6 +30,7 @@ from flask import Flask, jsonify, request
 
 import audit
 import config
+import detector
 
 app = Flask(__name__)
 
@@ -148,19 +149,19 @@ def health():
     })
 
 
-# ── YOU BUILD THIS ────────────────────────────────────────────────────────────
+# ── SUBMISSION ROUTE — MILESTONE 3 ────────────────────────────────────────────
 
 @app.post("/submit")
 # @limiter.limit(f"{config.RATE_LIMIT_PER_MINUTE}/minute;{config.RATE_LIMIT_PER_DAY}/day")
 def submit():
     """
-    Take a piece of text, decide about it, log the decision, answer.
-    ← TODO — Milestones 3, 4 and 5
+    Score text with signal one and log the result. Confidence and label remain
+    placeholders until their later milestones.
 
     Expects JSON:
         {"text": "...", "creator_id": "..."}
 
-    Should return JSON with, at minimum:
+    The final response schema will include:
         {"content_id": "...", "guess": "...", "confidence": 0.0, "label": "...",
          "model_score": 0.0, "style_score": 0.0}
 
@@ -199,17 +200,68 @@ def submit():
     what should this do when `text` is missing, empty, or enormous? A crash on
     a malformed input is one of the most common real failures there is.
     """
-    payload = request.get_json(silent=True) or {}
+    payload = request.get_json(silent=True)
+    creator_id = "unknown"
+    creator_valid = False
+    if isinstance(payload, dict):
+        supplied_creator_id = payload.get("creator_id")
+        if isinstance(supplied_creator_id, str) and supplied_creator_id.strip():
+            creator_id = supplied_creator_id.strip()
+            creator_valid = True
 
-    # TODO: delete this and build the route.
+    def reject(error: str, message: str, status: int = 400):
+        audit.log_rejection(creator_id=creator_id, reason=error, error=error)
+        return jsonify({"error": error, "message": message}), status
+
+    if not isinstance(payload, dict):
+        return reject("invalid_json", "Request body must be a JSON object.")
+
+    if "text" not in payload or payload["text"] is None:
+        return reject("missing_text", "No text provided.")
+
+    text = payload["text"]
+    if not isinstance(text, str):
+        return reject("invalid_text", "Text must be a string.")
+    if not text.strip():
+        return reject("empty_text", "Input is empty.")
+    if len(text) > config.MAX_SUBMISSION_CHARS:
+        return reject(
+            "text_too_large",
+            f"Input exceeds the limit of {config.MAX_SUBMISSION_CHARS:,} characters.",
+        )
+
+    if not creator_valid:
+        return reject("invalid_creator_id", "A non-empty creator_id is required.")
+
+    try:
+        model_score = detector.model_signal(text)
+    except detector.DetectorUnavailable:
+        return reject(
+            "detector_unavailable",
+            "The local detector is unavailable.",
+            status=503,
+        )
+    except ValueError:
+        return reject(
+            "text_too_short",
+            "Text is too short to score; provide a few sentences.",
+        )
+
+    content_id = str(uuid.uuid4())
+    audit.log_decision(
+        content_id=content_id,
+        creator_id=creator_id,
+        guess=None,
+        model_score=model_score,
+        label="Pending Milestone 5: no label assigned yet.",
+        status="decided",
+    )
     return jsonify({
-        "error": "not_implemented",
-        "message": "POST /submit isn't built yet — see the TODO in app.py.",
-        "you_sent": {
-            "text_length": len(payload.get("text", "")),
-            "creator_id": payload.get("creator_id"),
-        },
-    }), 501
+        "content_id": content_id,
+        "model_score": model_score,
+        "confidence": 0.0,
+        "label": "Pending Milestone 5: no label assigned yet.",
+    })
 
 
 @app.post("/appeal")

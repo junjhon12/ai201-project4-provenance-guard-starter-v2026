@@ -73,7 +73,7 @@ Missing text: “No text provided.”
 
 Empty text: “Input is empty.”
 
-Oversized text: “Input exceeds the limit of X.”
+Oversized text: “Input exceeds the limit of 10,000 characters.”
 
 
 **Why this target:**

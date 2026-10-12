@@ -1,0 +1,14 @@
+{"timestamp": "2026-10-12T21:45:48+00:00", "creator_id": "unknown", "event": "rejected", "status": "rejected", "reason": "invalid_json", "error": "invalid_json"}
+{"timestamp": "2026-10-12T21:45:56+00:00", "creator_id": "unknown", "event": "rejected", "status": "rejected", "reason": "invalid_json", "error": "invalid_json"}
+{"timestamp": "2026-10-12T21:46:02+00:00", "creator_id": "unknown", "event": "rejected", "status": "rejected", "reason": "invalid_json", "error": "invalid_json"}
+{"timestamp": "2026-10-12T21:46:40+00:00", "content_id": "748f5155-f58c-49a8-82b3-d84afb9d2f7a", "creator_id": "milestone3-sample", "guess": null, "model_score": 0.7198, "style_score": null, "combined_score": null, "label": "Pending Milestone 5: no label assigned yet.", "status": "decided"}
+{"timestamp": "2026-10-12T21:47:00+00:00", "creator_id": "test-creator", "event": "rejected", "status": "rejected", "reason": "missing_text", "error": "missing_text"}
+{"timestamp": "2026-10-12T21:47:00+00:00", "creator_id": "test-creator", "event": "rejected", "status": "rejected", "reason": "empty_text", "error": "empty_text"}
+{"timestamp": "2026-10-12T21:47:00+00:00", "creator_id": "test-creator", "event": "rejected", "status": "rejected", "reason": "text_too_large", "error": "text_too_large"}
+{"timestamp": "2026-10-12T21:47:00+00:00", "creator_id": "test-creator", "event": "rejected", "status": "rejected", "reason": "text_too_short", "error": "text_too_short"}
+{"timestamp": "2026-10-12T21:47:00+00:00", "creator_id": "unknown", "event": "rejected", "status": "rejected", "reason": "invalid_creator_id", "error": "invalid_creator_id"}
+{"timestamp": "2026-10-12T21:47:00+00:00", "creator_id": "unknown", "event": "rejected", "status": "rejected", "reason": "invalid_json", "error": "invalid_json"}
+{"timestamp": "2026-10-12T21:47:48+00:00", "content_id": "b020181d-d21d-4c97-827c-8bf7d62d08e3", "creator_id": "limit-boundary-test", "guess": null, "model_score": 0.9975, "style_score": null, "combined_score": null, "label": "Pending Milestone 5: no label assigned yet.", "status": "decided"}
+{"timestamp": "2026-10-12T21:47:48+00:00", "creator_id": "limit-boundary-test", "event": "rejected", "status": "rejected", "reason": "text_too_large", "error": "text_too_large"}
+{"timestamp": "2026-10-12T21:47:55+00:00", "creator_id": "offline-test", "event": "rejected", "status": "rejected", "reason": "detector_unavailable", "error": "detector_unavailable"}
+{"timestamp": "2026-10-12T21:49:04+00:00", "content_id": "a4f0dc9c-a8ab-453b-8888-c04c9b659bf4", "creator_id": "milestone3-sample", "guess": null, "model_score": 0.7198, "style_score": null, "combined_score": null, "label": "Pending Milestone 5: no label assigned yet.", "status": "decided"}

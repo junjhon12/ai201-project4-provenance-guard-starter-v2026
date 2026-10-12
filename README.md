@@ -58,14 +58,14 @@
    label; the client displays that label. A writer can send the `content_id` and
    their reasoning to `POST /appeal`, which records the appeal for review.
 
-The submit and appeal routes are still `501 not_implemented` in this starter;
-this is the intended flow and contract to build, not a claim that they already
-work.
+Milestone 3 implements `POST /submit` with only the model signal: it returns a
+`content_id` and `model_score`, while confidence and label remain explicit
+placeholders. The style signal, combined score, final label, and appeal route
+are later milestones; the full flow above describes that planned behavior.
 
 ### Endpoint contracts
 
-These are the planned contracts for the two endpoints this unit builds. Requests
-use a JSON object with `Content-Type: application/json`.
+Requests use a JSON object with `Content-Type: application/json`.
 
 #### `POST /submit`
 
@@ -73,7 +73,7 @@ use a JSON object with `Content-Type: application/json`.
 
 | Field | Type | Meaning |
 |---|---|---|
-| `text` | string | The text to score; must contain non-whitespace text long enough for the detector. |
+| `text` | string | The text to score; must contain non-whitespace text long enough for the detector and be at most 10,000 characters. |
 | `creator_id` | string | Identifier for the submitting writer; used to associate the decision and any appeal. |
 
 **Successful response (`200`)**
@@ -81,17 +81,18 @@ use a JSON object with `Content-Type: application/json`.
 | Field | Type | Meaning |
 |---|---|---|
 | `content_id` | string | Unique identifier for this submission, returned for future appeals. |
-| `guess` | string | One of `ai`, `human`, or `unsure`. |
-| `confidence` | number, 0–1 | The combined AI-likelihood score (not a calibrated probability); included because the existing evaluation tools read this field. |
-| `label` | string | Plain-language result shown to the reader. |
+| `confidence` | number | Milestone 3 placeholder (`0.0`); not a confidence estimate. |
+| `label` | string | Milestone 3 placeholder stating that labeling is not implemented yet. |
 | `model_score` | number, 0–1 | Predictability-based model signal; higher means more AI-like. |
-| `style_score` | number, 0–1 | Text-shape signal; higher means more AI-like. |
 
-Malformed JSON, missing or invalid fields, and text too short to score should
-return `400` with `{"error": "<stable_code>", "message": "<plain explanation>"}`.
-If the local detector cannot load, return `503` with the same error shape rather
-than manufacturing a score. Do not create a decision log entry when no decision
-was made; log the rejection separately.
+Missing text returns `400` with “No text provided.”, empty text returns `400`
+with “Input is empty.”, and text longer than 10,000 characters returns `400`
+with “Input exceeds the limit of 10,000 characters.” Other malformed or
+invalid input and text too short to score also return `400` with a stable error
+code and explanation. If the local detector cannot load, the route returns
+`503` rather than manufacturing a score. Rejections are recorded separately;
+they do not create a decision entry. `guess`, `style_score`, combined score,
+and final confidence/label behavior are deferred to later milestones.
 
 #### `POST /appeal`
 
@@ -226,46 +227,54 @@ checked with actual calibration inputs once both signals are implemented.
 
 ## Sample Run
 
-<!-- One submission and one appeal, pasted as text: the request, the response,
-     and the log entries. -->
+<!-- Paste the Milestone 3 submission and log requests and responses here. -->
 
-**A submission**
+**A submission (Milestone 3 — model signal only)**
 
-<!-- The response needs content_id, guess, confidence, label, AND both
-     signal scores - model_score and style_score. Unit 8's tools read those
-     two off the response, so leaving them out costs you next unit's
-     diagnostics. -->
+```powershell
+PS> '{"text":"Last Saturday I missed the bus, so I walked to the corner store instead. It was raining hard enough that my shoes squeaked when I went inside. The cashier laughed when I shook water off my jacket, and I bought a coffee I did not really need. I got home later than planned, but the walk ended up being the nicest part of my morning.","creator_id":"milestone3-sample"}' | curl.exe -i http://127.0.0.1:5000/submit -H 'Content-Type: application/json' --data-binary '@-'
+```
 
-```bash
-$ curl -X POST http://127.0.0.1:5000/submit \
-  -H "Content-Type: application/json" \
-  -d '{"text": "...", "creator_id": "..."}'
+```http
+HTTP/1.1 200 OK
 ```
 
 ```json
-
-```
-
-**An appeal**
-
-```bash
-$ curl -X POST http://127.0.0.1:5000/appeal \
-  -H "Content-Type: application/json" \
-  -d '{"content_id": "...", "reasoning": "..."}'
-```
-
-```json
-
+{
+  "confidence": 0.0,
+  "content_id": "a4f0dc9c-a8ab-453b-8888-c04c9b659bf4",
+  "label": "Pending Milestone 5: no label assigned yet.",
+  "model_score": 0.7198
+}
 ```
 
 **What the log shows afterwards**
 
-```bash
-$ curl "http://127.0.0.1:5000/log?limit=3"
+```powershell
+PS> curl.exe -i "http://127.0.0.1:5000/log?limit=1"
+```
+
+```http
+HTTP/1.1 200 OK
 ```
 
 ```json
-
+{
+  "count": 1,
+  "entries": [
+    {
+      "combined_score": null,
+      "content_id": "a4f0dc9c-a8ab-453b-8888-c04c9b659bf4",
+      "creator_id": "milestone3-sample",
+      "guess": null,
+      "label": "Pending Milestone 5: no label assigned yet.",
+      "model_score": 0.7198,
+      "status": "decided",
+      "style_score": null,
+      "timestamp": "2026-10-12T21:49:04+00:00"
+    }
+  ]
+}
 ```
 
 ---

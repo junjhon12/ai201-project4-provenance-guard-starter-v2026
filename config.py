@@ -25,6 +25,7 @@ PORT = int(os.getenv("PORT", "5000"))
 # Python prompt inside your process. Fine on loopback, a gift to strangers
 # anywhere else — so it turns itself off the moment HOST isn't loopback.
 DEBUG = os.getenv("AI201_DEBUG", "1") == "1" and HOST in ("127.0.0.1", "localhost")
+MAX_SUBMISSION_CHARS = 10_000
 
 
 # ─── The local model ─────────────────────────────────────────────────────────
