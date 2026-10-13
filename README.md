@@ -411,6 +411,16 @@ Response (`200`):
   and calibration figures aligned with the implementation, and described the
   result as uncertainty rather than proof of authorship.
 
+**Moment 3 — Unit 8**
+
+- *What I asked for:* I asked AI to compare the existing run artifacts and README against the
+  Milestone 6 requirements, then help make verdicts and limitations explicit.
+- *What came back:* It identified blank report verdict tables, blank attack marks, and a
+  “What's Still Broken” section without a next step for each failure.
+- *What I changed:* I filled the summaries from committed evidence, added synthetic-only caveats,
+  and reviewed each held/broke judgment against the recorded response. I did not add human-writing
+  or reader-study results that were not collected.
+
 <!-- ═══════════════════════ UNIT 8 — THE TEST ═══════════════════════ -->
 
 ---
@@ -450,15 +460,27 @@ The flood test recorded 10 decisions and 5 `rate_limited` rejections in
 
 The earlier rate-limit flood is recorded in
 [`results/flood_2026-10-13_0729.md`](./results/flood_2026-10-13_0729.md): ten
-requests returned 200, then five returned 429. The provenance run is a separate,
-explicitly synthetic eight-row test set because no attack-set folder was
-provided. The complete run is
+requests returned 200, then five returned 429. The provenance run uses the explicitly synthetic eight-row set in
+`attack_sets/synthetic_m5`. The complete run is
 [`results/attack_run_2026-10-13_0929_before.md`](./results/attack_run_2026-10-13_0929_before.md).
 Five scoreable submissions returned 200; three malformed requests returned
 400; none crashed or returned 5xx. The five guesses were `unsure`, `unsure`,
-`unsure`, `ai`, `unsure`, in that order. The harness leaves all eight verdicts
-for human judgment; its `confidence` field is a placeholder, so the detailed
-combined scores are in the audit entries and report JSON.
+`unsure`, `ai`, `unsure`, in that order. All eight verdicts below are judgments
+against their synthetic targets. `confidence` in the harness
+is a placeholder, so the combined scores come from the corresponding audit
+entries and report JSON. The false-positive proxies are not authenticated
+human writing, and the evasion/baseline inputs have no verified authorship.
+
+| ID | Outcome | Verdict |
+|---|---|---|
+| FP01 | `200`, unsure, combined score 0.4810 | HELD — no AI accusation |
+| FP02 | `200`, unsure, combined score 0.5713 | HELD — no AI accusation |
+| EV01 | `200`, unsure, combined score 0.4925 | BROKE — remained below the expected AI label |
+| EV02 | `200`, ai, combined score 0.6548 | HELD — crossed the AI threshold |
+| AI01 | `200`, unsure, combined score 0.5773 | BROKE — baseline probe remained unsure |
+| MR01 | `400`, missing `text` | HELD — rejected at route |
+| MR02 | `400`, JSON array instead of object | HELD — rejected at route |
+| MR03 | `400`, invalid JSON | HELD — rejected at route |
 
 **Ten audit log entries from the baseline run**
 
@@ -479,10 +501,18 @@ before/after request evidence is in the linked reports.
 {"timestamp":"2026-10-13T13:29:58+00:00","creator_id":"eval_bad_missing","event":"rejected","status":"rejected","reason":"missing_text","error":"missing_text"}
 ```
 
-**The worst observed classification outcome:** synthetic formal-prose probe
-EV02 was labeled `ai` at combined score 0.6548, just above the 0.65 threshold.
-It is not authenticated human writing, so this is not evidence of a false
-positive against a real writer.
+**Attack diagnosis:** FP01 and FP02 were held at the combining/label-mapping
+stage: their combined scores (0.4810 and 0.5713) remained in the unsure band,
+below the 0.65 AI threshold. EV01 broke through the intended evasion check:
+its model/style scores (0.4166 and 0.5683) averaged to 0.4925, so it mapped to
+unsure instead of the expected AI label. EV02's scores (0.7073 and 0.6023)
+averaged to 0.6548, just over the AI threshold. AI01 broke the baseline probe
+at the same combining/label-mapping stage: its scores (0.6440 and 0.5106)
+averaged to 0.5773 and remained unsure. MR01–MR03 were held by route
+validation before either signal ran.
+Because the content's true authorship is unknown, these marks describe
+observed outputs against the stated synthetic expectations, not confirmed
+authorship attacks.
 
 ---
 
@@ -587,18 +617,18 @@ Here is the direct comparison; `Score` is the logged combined score (the API's
 
 | Attack | Before: status / guess / score | After: status / guess / score | Difference |
 |---|---|---|---|
-| FP01 — synthetic plain prose | 200 / `unsure` / 0.4810 | 200 / `unsure` / 0.4810 | None |
-| FP02 — synthetic everyday prose | 200 / `unsure` / 0.5713 | 200 / `unsure` / 0.5713 | None |
-| EV01 — typo-heavy prose | 200 / `unsure` / 0.4925 | 200 / `unsure` / 0.4925 | None |
-| EV02 — formal prose | 200 / `ai` / 0.6548 | 200 / `ai` / 0.6548 | None |
-| AI01 — polished generic prose | 200 / `unsure` / 0.5773 | 200 / `unsure` / 0.5773 | None |
-| MR01 — missing text | 400 / rejected | 400 / rejected | None |
-| MR02 — JSON array | 400 / rejected | 400 / rejected | None |
-| MR03 — invalid JSON | 400 / rejected | 400 / rejected | None |
+| FP01 — synthetic plain prose | 200 / `unsure` / 0.4810 | 200 / `unsure` / 0.4810 | HELD both; none |
+| FP02 — synthetic everyday prose | 200 / `unsure` / 0.5713 | 200 / `unsure` / 0.5713 | HELD both; none |
+| EV01 — typo-heavy prose | 200 / `unsure` / 0.4925 | 200 / `unsure` / 0.4925 | BROKE both; none |
+| EV02 — formal prose | 200 / `ai` / 0.6548 | 200 / `ai` / 0.6548 | HELD both; none |
+| AI01 — polished generic prose | 200 / `unsure` / 0.5773 | 200 / `unsure` / 0.5773 | BROKE both; none |
+| MR01 — missing text | 400 / rejected | 400 / rejected | HELD both; none |
+| MR02 — JSON array | 400 / rejected | 400 / rejected | HELD both; none |
+| MR03 — invalid JSON | 400 / rejected | 400 / rejected | HELD both; none |
 
-Both runs had zero 5xx/crash outcomes. The attack harness left all eight
-classification verdicts for human judgment; the three malformed requests were
-rejected at the route.
+Both runs had zero 5xx/crash outcomes and carry the same operational verdicts
+as the baseline table. The three malformed requests were rejected at the route;
+the five classification probes have no verified authorship labels.
 
 **Did it help, and how do I know:**
 
@@ -616,11 +646,33 @@ honest measured result of changing explanation text only.
      what you'd do, and why you stopped. -->
 
 The detector still cannot validate factual claims or fabricated citations
-(criteria 2 and 4); those need source-checking behavior, not a label-text
-change. Criterion 1 still needs 100 genuine human-written samples, and
-criterion 5 still needs a 30-reader comprehension study. The synthetic run
-cannot substitute for either. A larger authentic attack set and review of EV02
-would be the next useful measurement.
+(criteria 2 and 4). For criterion 2, I would add claim extraction and a
+traceable source/reproducibility check; for criterion 4, I would check that
+cited works exist and that quoted text matches the cited source. I stopped
+because the existing service only scores authorship and this milestone did
+not include building a source-verification pipeline; the current synthetic
+claims cannot validate one.
+
+Criterion 1 is still unverified: all three synthetic human-like proxies per
+trial landed in `unsure`, but they are not authenticated human writing and do
+not meet the 100-sample target. I would collect consented human-written
+samples, run the same three-trial evaluation, and measure the false-positive
+rate; I stopped because no such labeled writing set was supplied. Criterion 5
+is also unverified: the revised explanation names uncertainty, cautions that
+the result is not proof, and gives a review/sample condition, but no readers
+were tested. I would run the specified 30-reader comprehension study; I
+stopped because no participants or study results were available.
+
+Two probes were marked BROKE in both attack runs. EV01 returned `unsure` at
+0.4925 rather than the expected AI label; I would test a known-provenance
+evasion corpus and then recalibrate the model/style signals and threshold,
+but stopped rather than tune against unauthenticated synthetic text. AI01
+returned `unsure` at 0.5773; I would test a larger labeled AI baseline set and
+evaluate the score boundary, but stopped because this single synthetic probe
+cannot justify changing the threshold. These BROKE marks are operational
+judgments only: neither input's true authorship was verified. FP01/FP02 and
+EV02 were HELD on the observed label criterion, while MR01–MR03 were rejected
+at route validation; those outcomes also do not establish broader robustness.
 
 **The trade I'd make if this ran for real:**
 
