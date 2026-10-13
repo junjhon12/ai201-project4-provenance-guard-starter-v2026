@@ -1,0 +1,4 @@
+id,family,targets,raw_body,send_as,content_type
+MR01,malformed_request,"JSON object without required text field","{""creator_id"":""attack_missing_text""}",json,application/json
+MR02,malformed_request,"JSON array instead of an object","[]",json,application/json
+MR03,malformed_request,"Unparseable JSON body","{not-json",raw,application/json

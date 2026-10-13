@@ -446,34 +446,43 @@ The flood test recorded 10 decisions and 5 `rate_limited` rejections in
 ## Attack Run — Before
 
 <!-- Every attack with its outcome and a held-or-broke mark.
-     `run_attacks.py --label before` produces the table. -->
+     `run_attacks.py --set attack_sets/synthetic_m5 --label before`. -->
 
-**Available attack evidence — rate-limit flood:** `results/flood_2026-10-13_0729.md`
-records 15 submissions from one creator: ten returned 200 and five returned
-429. **Held at the route:** the limiter allows ten submissions per minute for
-that creator, then rejects and logs the remaining five. This does not show
-whether any provenance or evasion attack was held; no full attack-run report
-is present in the repository.
+The earlier rate-limit flood is recorded in
+[`results/flood_2026-10-13_0729.md`](./results/flood_2026-10-13_0729.md): ten
+requests returned 200, then five returned 429. The provenance run is a separate,
+explicitly synthetic eight-row test set because no attack-set folder was
+provided. The complete run is
+[`results/attack_run_2026-10-13_0929_before.md`](./results/attack_run_2026-10-13_0929_before.md).
+Five scoreable submissions returned 200; three malformed requests returned
+400; none crashed or returned 5xx. The five guesses were `unsure`, `unsure`,
+`unsure`, `ai`, `unsure`, in that order. The harness leaves all eight verdicts
+for human judgment; its `confidence` field is a placeholder, so the detailed
+combined scores are in the audit entries and report JSON.
 
+**Ten audit log entries from the baseline run**
 
+These are the five scoring requests, three malformed-request rejections, and
+the first two bad-input rejections from the three-trial evaluation. Full
+before/after request evidence is in the linked reports.
 
-**Ten audit log entries from the run**
+```jsonl
+{"timestamp":"2026-10-13T13:29:52+00:00","content_id":"e8b26ff3-ab6f-4b6e-80c4-7f5e2a9f95a6","creator_id":"attacker_FP01","guess":"unsure","model_score":0.4611,"style_score":0.5009,"combined_score":0.481,"label":"We can't tell from these signals whether this text was written by a person or with AI.","status":"decided"}
+{"timestamp":"2026-10-13T13:29:52+00:00","content_id":"8771f0b1-7cb5-4808-9878-b090118c7621","creator_id":"attacker_FP02","guess":"unsure","model_score":0.6407,"style_score":0.5018,"combined_score":0.57125,"label":"We can't tell from these signals whether this text was written by a person or with AI.","status":"decided"}
+{"timestamp":"2026-10-13T13:29:52+00:00","content_id":"c8879b4e-45db-44c1-bbc1-08a70d527ae0","creator_id":"attacker_EV01","guess":"unsure","model_score":0.4166,"style_score":0.5683,"combined_score":0.49245000000000005,"label":"We can't tell from these signals whether this text was written by a person or with AI.","status":"decided"}
+{"timestamp":"2026-10-13T13:29:52+00:00","content_id":"58925ba0-a739-4583-9e3d-b9151fed11b2","creator_id":"attacker_EV02","guess":"ai","model_score":0.7073,"style_score":0.6023,"combined_score":0.6548,"label":"Our signals suggest this text may have been written with AI, but this is not proof.","status":"decided"}
+{"timestamp":"2026-10-13T13:29:52+00:00","content_id":"ce522a68-52bf-4bb5-aacc-90fcf17515f9","creator_id":"attacker_AI01","guess":"unsure","model_score":0.644,"style_score":0.5106,"combined_score":0.5773,"label":"We can't tell from these signals whether this text was written by a person or with AI.","status":"decided"}
+{"timestamp":"2026-10-13T13:29:52+00:00","creator_id":"attack_missing_text","event":"rejected","status":"rejected","reason":"missing_text","error":"missing_text"}
+{"timestamp":"2026-10-13T13:29:52+00:00","creator_id":"unknown","event":"rejected","status":"rejected","reason":"invalid_json","error":"invalid_json"}
+{"timestamp":"2026-10-13T13:29:52+00:00","creator_id":"unknown","event":"rejected","status":"rejected","reason":"invalid_json","error":"invalid_json"}
+{"timestamp":"2026-10-13T13:29:58+00:00","creator_id":"eval_bad_empty","event":"rejected","status":"rejected","reason":"empty_text","error":"empty_text"}
+{"timestamp":"2026-10-13T13:29:58+00:00","creator_id":"eval_bad_missing","event":"rejected","status":"rejected","reason":"missing_text","error":"missing_text"}
+```
 
-<!-- Choose entries that show the interesting failures, not the ten easiest. -->
-
-The flood report records the status-code sequence, but the repository does not
-contain ten pasted entries tied to a full attack run. The available audit log
-does contain `rate_limited` rejection records; I am not presenting unrelated
-historical entries as if they came from that run.
-
-**The single worst outcome** — the one I'd least want to explain to a writer
-whose work got caught by it:
-
-No worst provenance-classification outcome can be selected from the available
-attack evidence. The recorded flood tested request volume, not a known
-human-written or AI-written attack sample.
-
-
+**The worst observed classification outcome:** synthetic formal-prose probe
+EV02 was labeled `ai` at combined score 0.6548, just above the 0.65 threshold.
+It is not authenticated human writing, so this is not evidence of a false
+positive against a real writer.
 
 ---
 
@@ -481,30 +490,25 @@ human-written or AI-written attack sample.
 
 <!-- Your five criteria across three trials. `run_eval.py --label before`. -->
 
-No `run_eval.py` output is tracked, and `scenarios.py` still contains
-placeholders. The run columns therefore say what evidence exists rather than
-inventing three trials. Criterion 3 has a pre-existing invalid-input check in
-`logs/audit.jsonl`; it is not three repeated runs.
+`run_eval.py --label before` and `run_eval.py --label after` each ran the five
+scenarios three times. The complete JSON evidence is in
+[`results/run_2026-10-13_0929_before.md`](./results/run_2026-10-13_0929_before.md)
+and [`results/run_2026-10-13_0930_after.md`](./results/run_2026-10-13_0930_after.md).
+The table gives each scenario's three outputs per trial; each text scenario
+contained three synthetic inputs. These runs do not meet the original sample
+sizes or authenticity requirements.
 
-| Criterion | Target | Run 1 | Run 2 | Run 3 | Verdict |
-|---|---|---|---|---|---|
-| 1. False positives | No more than 20 of 100 human-written samples labeled True (AI); at least 80 labeled False. | Not recorded | Not recorded | Not recorded | **UNVERIFIED** — no 100-piece human sample or trial results. |
-| 2. Factuality | At least 85% of verifiable factual claims in 100 outputs supported by evidence. | Not recorded | Not recorded | Not recorded | **MISSED by implementation inspection** — this service classifies authorship; it has no factual-claim or source-verification behavior. No 100-output measurement exists. |
-| 3. Bad input | Missing, empty, and over-10,000-character text each rejected with the specified message and no normal answer. | Existing check: all three rejection reasons logged | Not recorded | Not recorded | **MET for the checked cases** — route responses use the specified messages and reject before scoring; `logs/audit.jsonl` records `missing_text`, `empty_text`, and `text_too_large`. This is not evidence of three trial runs. |
-| 4. Fake evidence | Flag or refuse fabricated citations, nonexistent sources, or unsupported quotes in at least 95% of 50 cases. | Not recorded | Not recorded | Not recorded | **MISSED by implementation inspection** — the route and signals do not check citations, sources, or quote support. No 50-case measurement exists. |
-| 5. Explanation quality | At least 80% of readers in 30 tests can state the decision, its main reason, and what evidence or condition would change it. | No reader study | No reader study | No reader study | **UNVERIFIED** — no reader study exists; the fixed label text does not specify what evidence or condition would change a result. |
+| Criterion / scenario | Before: Trials 1 / 2 / 3 | After: Trials 1 / 2 / 3 | Assessment |
+|---|---|---|---|
+| 1. False positives — synthetic human-like prose proxy | `unsure, unsure, unsure` / same / same | `unsure, unsure, unsure` / same / same | **UNVERIFIED** — 3 synthetic proxies per trial, not 100 authenticated human samples. No proxy received an `ai` label, but this is not a measured false-positive rate. |
+| 2. Factuality — synthetic factual-claim examples | `unsure, unsure, ai` / same / same | `unsure, unsure, ai` / same / same | **MISSED by implementation** — classification output is not factuality checking or source verification. |
+| 3. Bad input — empty, missing, oversized | `400, 400, 400` / same / same | `400, 400, 400` / same / same | **MET for these cases** — all three rejection reasons (`empty_text`, `missing_text`, `text_too_large`) were logged in every trial; no normal result was returned. |
+| 4. Fake evidence — synthetic fabricated-citation examples | `human, unsure, unsure` / same / same | `human, unsure, unsure` / same / same | **MISSED by implementation** — the signals classify prose; they do not verify citations or quotations. |
+| 5. Explanation quality — synthetic output probes | `ai, unsure, unsure` / same / same | `ai, unsure, unsure` / same / same | **UNVERIFIED** — wording was improved, but no 30-reader comprehension study was conducted. |
 
-Criterion 1 is measurable, but no trial evidence supports either verdict. Criteria
-2 and 4 are misses based on the implemented behavior, not measured percentages:
-the service has no factuality or fake-evidence validation path. Criterion 5's
-reader-comprehension percentage cannot be inferred from source inspection, so it
-remains unverified despite the missing change-condition explanation.
-
-**Real output from one trial**, pasted as text, naming the file and function
-that produced it:
-
-No criterion-trial output is available to paste. The audit log's flood records
-are route-rate-limit evidence, not a substitute for a `run_eval.py` trial.
+Repeated outputs were identical across all three trials. The synthetic set has
+only three texts per text scenario and does not establish the 100-sample,
+50-case, or 30-reader targets in [criteria.md](./criteria.md).
 
 **Diagnoses**
 
@@ -533,18 +537,22 @@ are route-rate-limit evidence, not a substitute for a `run_eval.py` trial.
   specifically flagged or refused. This is the same missing verification
   capability as criterion 2, not 50 separate signal failures.
 - **Criterion 5 — explanation quality (UNVERIFIED).** Stage: label mapping.
-  Mechanism: `scoring.score_to_label` returns fixed label text based on score
-  bands; the text does not identify evidence or a condition that would change
-  the result. That is a concrete gap, but without 30 reader tests I cannot say
-  what percentage can state all three required parts.
+  Mechanism: the original `scoring.score_to_label` text named the broad result
+  but not a useful next step or a condition that could change it. This wording
+  gap was the one chosen for the improvement below. The revised text now names
+  the result, cautions that it is not proof, and offers a fuller sample or
+  independent review; without 30 reader tests, comprehension remains
+  unverified.
 - **Recorded flood attack — HELD.** Stage: route limiter, before `/submit`.
   Mechanism: ten requests in the creator's one-minute bucket returned 200;
   the next five returned 429 and were logged as `rate_limited`. This establishes
   the configured limit for this one-creator flood, not resistance to rotating
-  creator IDs or to the unrecorded provenance/evasion attacks.
-- **Criterion 1 — false positives (UNVERIFIED).** There is no human-authored
-  100-piece sample or three-trial result, so no stage can be blamed from this
-  evidence. The repeated `flood_tester` entry is not a human-writing test.
+  creator IDs. The synthetic provenance/evasion results are recorded above but
+  are not an authentic attack set.
+- **Criterion 1 — false positives (UNVERIFIED).** Three synthetic human-like
+  proxies per trial all received `unsure`, not `ai`. They are not authenticated
+  human writing and do not satisfy the 100-sample target, so no real-world
+  false-positive rate can be inferred.
 - **Criterion 3 — bad input (MET for the checked cases).** Stage: route.
   Mechanism: `/submit` checks for missing, empty, and over-limit text before
   calling either signal; the rejection helper returns an error response and
@@ -558,22 +566,47 @@ are route-rate-limit evidence, not a substitute for a `run_eval.py` trial.
 
 ## The Improvement
 
-**What I changed:**
+**What I changed:** Only the three reader-facing strings returned by
+`scoring.score_to_label` in [scoring.py](./scoring.py). Each now states what the
+scores indicate, cautions that the result is not proof, and identifies a fuller
+sample or independent review (or relevant drafting context for the AI-like
+band) as something that could change the result. The signal calculations,
+weights, thresholds, and route behavior did not change.
 
-**Which diagnosis pointed at it:**
+**Which diagnosis pointed at it:** Criterion 5's diagnosis above: the label
+mapping did not name evidence or a condition that could change a result.
 
 ### Attack Run — After
 
-<!-- Same format. `run_attacks.py --label after` -->
+<!-- Same format. `run_attacks.py --set attack_sets/synthetic_m5 --label after` -->
 
+The complete post-change report is
+[`results/attack_run_2026-10-13_0930_after.md`](./results/attack_run_2026-10-13_0930_after.md).
+Here is the direct comparison; `Score` is the logged combined score (the API's
+`confidence` field remains a placeholder).
 
+| Attack | Before: status / guess / score | After: status / guess / score | Difference |
+|---|---|---|---|
+| FP01 — synthetic plain prose | 200 / `unsure` / 0.4810 | 200 / `unsure` / 0.4810 | None |
+| FP02 — synthetic everyday prose | 200 / `unsure` / 0.5713 | 200 / `unsure` / 0.5713 | None |
+| EV01 — typo-heavy prose | 200 / `unsure` / 0.4925 | 200 / `unsure` / 0.4925 | None |
+| EV02 — formal prose | 200 / `ai` / 0.6548 | 200 / `ai` / 0.6548 | None |
+| AI01 — polished generic prose | 200 / `unsure` / 0.5773 | 200 / `unsure` / 0.5773 | None |
+| MR01 — missing text | 400 / rejected | 400 / rejected | None |
+| MR02 — JSON array | 400 / rejected | 400 / rejected | None |
+| MR03 — invalid JSON | 400 / rejected | 400 / rejected | None |
+
+Both runs had zero 5xx/crash outcomes. The attack harness left all eight
+classification verdicts for human judgment; the three malformed requests were
+rejected at the route.
 
 **Did it help, and how do I know:**
 
-<!-- Widening the unsure band usually fixes one problem and creates another.
-     Reporting that trade honestly is worth full credit. -->
-
-
+It helped the diagnosed wording gap: labels now state the result is not proof
+and give a review/sample condition. It did **not** change any score, guess, or
+HTTP outcome in this attack set, and it cannot be said to improve reader
+comprehension without the required reader study. The unchanged outputs are the
+honest measured result of changing explanation text only.
 
 ---
 
@@ -582,14 +615,22 @@ are route-rate-limit evidence, not a substitute for a `run_eval.py` trial.
 <!-- For each attack still getting through and each criterion still missed:
      what you'd do, and why you stopped. -->
 
-
+The detector still cannot validate factual claims or fabricated citations
+(criteria 2 and 4); those need source-checking behavior, not a label-text
+change. Criterion 1 still needs 100 genuine human-written samples, and
+criterion 5 still needs a 30-reader comprehension study. The synthetic run
+cannot substitute for either. A larger authentic attack set and review of EV02
+would be the next useful measurement.
 
 **The trade I'd make if this ran for real:**
 
 <!-- Two sentences. Fewer wrong accusations means more AI text getting through.
      Say which way you'd go and WHO PAYS FOR IT. -->
 
-
+I would keep the cautious wording and prefer an `unsure` result over an
+unsupported high-confidence accusation, while preserving a clear route to
+independent review. Writers bear the cost of false accusations; the service
+owner bears the cost of more AI-written text remaining unflagged.
 
 <!-- ═════════════════════════════════════════════════════════════════════
 

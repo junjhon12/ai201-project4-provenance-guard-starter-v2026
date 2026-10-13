@@ -1,0 +1,6 @@
+id,family,targets,text
+FP01,false_positive_proxy,"Synthetic plain-language prose; not authenticated human writing","I keep a list on the fridge because otherwise I forget what we need. This week it has apples, rice, and coffee. I will probably add something else before Saturday."
+FP02,false_positive_proxy,"Synthetic everyday prose; not authenticated human writing","The bus was late again, so I walked the last few blocks. It was cold but not unpleasant. I got home a little after six."
+EV01,evasion,"Synthetic typo-heavy prose tests whether errors change the score","The meeting were moved to Friday and I didnt see the message until late. We has to change the room too. It was a bit confusing but we got it sorted."
+EV02,evasion,"Synthetic formal prose probes predictable language-model scoring","The implementation of the proposed framework requires careful consideration of several key factors. First, the system must handle a broad range of inputs. Additionally, performance depends on the interaction of multiple variables."
+AI01,ai_baseline,"Synthetic polished generic prose used only as a score probe","Effective communication is essential for successful collaboration. By establishing clear goals and maintaining consistent progress, teams can address challenges and achieve meaningful outcomes."

@@ -67,7 +67,8 @@ class ScoringIntegrationTests(unittest.TestCase):
             self.assertEqual(payload["confidence"], 0.0)
             self.assertEqual(
                 payload["label"],
-                "We can't tell from these signals whether this text was written by a person or with AI.",
+                "The signals do not support a clear authorship label. This is not an "
+                "accusation; a fuller sample or independent review could change the result.",
             )
 
             entry = json.loads(log_path.read_text(encoding="utf-8").splitlines()[0])
@@ -125,7 +126,12 @@ class Milestone5Tests(unittest.TestCase):
     def test_score_to_label_covers_configured_boundaries(self):
         self.assertEqual(
             scoring.score_to_label(config.HUMAN_THRESHOLD),
-            ("human", "Our signals suggest this text was probably written by a person."),
+            (
+                "human",
+                "The combined scores fall in a human-like range. This is not proof "
+                "of human authorship; a fuller sample or independent review could "
+                "change the result.",
+            ),
         )
         self.assertEqual(
             scoring.score_to_label(
@@ -133,14 +139,17 @@ class Milestone5Tests(unittest.TestCase):
             ),
             (
                 "unsure",
-                "We can't tell from these signals whether this text was written by a person or with AI.",
+                "The signals do not support a clear authorship label. This is not an "
+                "accusation; a fuller sample or independent review could change the result.",
             ),
         )
         self.assertEqual(
             scoring.score_to_label(config.AI_THRESHOLD),
             (
                 "ai",
-                "Our signals suggest this text may have been written with AI, but this is not proof.",
+                "The combined scores fall in an AI-like range. This is not proof "
+                "of AI authorship; independent review or relevant drafting context "
+                "could change the result.",
             ),
         )
 

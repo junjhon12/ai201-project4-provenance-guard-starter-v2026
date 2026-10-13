@@ -85,14 +85,21 @@ def score_to_label(score: float) -> tuple[str, str]:
     if score >= config.AI_THRESHOLD:
         return (
             "ai",
-            "Our signals suggest this text may have been written with AI, "
-            "but this is not proof.",
+            "The combined scores fall in an AI-like range. This is not proof "
+            "of AI authorship; independent review or relevant drafting context "
+            "could change the result.",
         )
     if score <= config.HUMAN_THRESHOLD:
-        return "human", "Our signals suggest this text was probably written by a person."
+        return (
+            "human",
+            "The combined scores fall in a human-like range. This is not proof "
+            "of human authorship; a fuller sample or independent review could "
+            "change the result.",
+        )
     return (
         "unsure",
-        "We can't tell from these signals whether this text was written by a person or with AI.",
+        "The signals do not support a clear authorship label. This is not an "
+        "accusation; a fuller sample or independent review could change the result.",
     )
 
 

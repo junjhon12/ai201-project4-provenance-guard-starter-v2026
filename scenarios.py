@@ -5,11 +5,11 @@ Each of your five criteria needs something run against it. A criterion about
 false positives needs your own writing. One about label coverage needs inputs
 across the score range. One about the appeal path needs a real content_id.
 
-Working that out is Milestone 3's first step, and this file is where you write
-it down. `run_eval.py` runs everything here three times.
-
-Two are filled in as examples. Replace them with what your criteria actually
-need — these are a shape, not a set.
+`run_eval.py` runs everything here three times. The current Milestone 5
+scenarios use synthetic inputs because no personal writing or evaluation data
+was provided. They exercise the request/response path but cannot establish
+real-world false-positive rates, factuality, fake-evidence detection, or reader
+comprehension.
 
 A scenario carries **either** of these:
 
@@ -24,47 +24,72 @@ A scenario carries **either** of these:
 
 SCENARIOS = [
     {
-        "name": "my own writing",
+        "name": "synthetic human-like prose proxy",
         "criterion": 1,
-        # ⚠️ PUT YOUR OWN WRITING HERE. Not AI text, not a sample from the web —
-        # things you actually wrote. This is the criterion that matters most and
-        # it's meaningless with someone else's prose.
         "texts": [
-            "REPLACE ME with a paragraph you wrote yourself.",
-            "REPLACE ME with another one. Ten pieces is the usual number.",
+            "I keep a list on the fridge because otherwise I forget what we need. "
+            "This week it has apples, rice, and the coffee that ran out yesterday. "
+            "I will probably add something else before Saturday.",
+            "The bus was late again, so I walked the last few blocks. It was cold "
+            "but not unpleasant, and I had enough time to stop for a sandwich. "
+            "I got home a little after six.",
+            "Our group met after class to divide up the work. I took the first "
+            "section because I already had notes from last week. We agreed to "
+            "check in again on Thursday.",
         ],
     },
     {
-        "name": "label coverage",
+        "name": "synthetic factual-claim examples",
         "criterion": 2,
-        # Inputs spread across your score range, so you can check all three
-        # labels are actually reachable.
         "texts": [
-            "REPLACE ME with something you're confident is AI-generated.",
-            "REPLACE ME with something you're confident is human-written.",
-            "REPLACE ME with something genuinely borderline.",
+            "Water freezes at zero degrees Celsius at standard atmospheric "
+            "pressure. This is a familiar physical property of pure water. "
+            "The exact freezing point can shift when substances are dissolved.",
+            "Earth travels around the Sun once each year. A day is tied to "
+            "Earth's rotation on its axis. These motions help define common "
+            "units of time.",
+            "The Pacific Ocean is larger than the Atlantic Ocean. It covers a "
+            "substantial part of Earth's surface. Ocean measurements depend "
+            "on how their boundaries are defined.",
         ],
     },
-    # A bad-input criterion looks like this. Uncomment and adjust if that's one
-    # of your five — these are raw request bodies, sent exactly as written.
-    #
-    # {
-    #     "name": "bad input",
-    #     "criterion": 3,
-    #     "bodies": [
-    #         {"text": "", "creator_id": "eval_bad_empty"},
-    #         {"creator_id": "eval_bad_missing"},          # no text field at all
-    #         {"text": "word " * 50000, "creator_id": "eval_bad_huge"},
-    #         {"text": None, "creator_id": "eval_bad_null"},
-    #     ],
-    # },
-
-    # TODO: add what your remaining criteria need.
-    #
-    # A criterion about the appeal path can't be tested by sending text alone;
-    # it needs a submission first and then an appeal against the content_id
-    # that came back. You'll need to test that one by hand, or extend this file
-    # and run_eval.py to do it. Saying which you did is part of the write-up.
+    {
+        "name": "bad input boundaries",
+        "criterion": 3,
+        "bodies": [
+            {"text": "", "creator_id": "eval_bad_empty"},
+            {"creator_id": "eval_bad_missing"},
+            {"text": "word " * 2501, "creator_id": "eval_bad_huge"},
+        ],
+    },
+    {
+        "name": "synthetic fabricated-citation examples",
+        "criterion": 4,
+        "texts": [
+            "A report claims that a fictional institute proved this result in "
+            "2023. It cites a made-up journal and an invented volume number. "
+            "No verification of the source is included.",
+            "The passage attributes a quotation to a nonexistent book and gives "
+            "a page number. The quotation is presented as exact evidence. "
+            "There is no reliable source attached.",
+            "This paragraph refers to a fabricated study by authors who do not "
+            "exist. It supplies a plausible title and publication year. "
+            "The citation itself is unsupported.",
+        ],
+    },
+    {
+        "name": "synthetic explanation-output probes",
+        "criterion": 5,
+        "texts": [
+            "One. Two. Three. Four. Five. Six. Seven. Eight. Nine. Ten.",
+            "The committee considered several alternatives before making its "
+            "decision. Each proposal was reviewed against the same documented "
+            "requirements. The final option was selected after that comparison.",
+            "Our research begins with a short question. We collect a few useful "
+            "examples and look for a pattern. The conclusion should stay close "
+            "to what those examples actually show.",
+        ],
+    },
 ]
 
 
