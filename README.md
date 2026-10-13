@@ -417,25 +417,29 @@ Response (`200`):
 
 ## Rate Limiting
 
-**My limits:** ___ per minute, ___ per day
+**My limits:** 10 per minute, 200 per day
 
 **Why those numbers and not others:**
-<!-- Think about two people: a real writer submitting their own work a few
-     times an hour, and a script sending a thousand variations to map your
-     thresholds. Your numbers have to be liveable for the first and hostile to
-     the second. -->
+Ten submissions per minute leaves room for a writer to revise and resubmit
+quickly, while 200 per day supports sustained legitimate use. The per-minute
+limit stops a rapid script from mapping the thresholds; the daily cap limits
+continued probing over time.
 
-**What a caller counts as:** <!-- per address, or per creator_id? They fail
-differently — one script can look like a thousand callers, and one household
-can look like one. -->
+**What a caller counts as:** requests share a bucket by `creator_id`; if it is
+missing or invalid, the limiter falls back to the remote address. Since a
+client can choose its `creator_id`, rotating IDs can evade this local
+per-creator limit.
 
 **The run of status codes when I pushed past it:**
 
 <!-- python run_attacks.py --flood 15 -->
 
 ```
-
+200 200 200 200 200 200 200 200 200 200 429 429 429 429 429
 ```
+
+The flood test recorded 10 decisions and 5 `rate_limited` rejections in
+`/log`; `/health` reported `rate_limiting: true`.
 
 ---
 

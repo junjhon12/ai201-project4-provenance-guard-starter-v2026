@@ -78,6 +78,48 @@ class ScoringIntegrationTests(unittest.TestCase):
             self.assertAlmostEqual(entry["combined_score"], 0.5)
             self.assertEqual(entry["label"], payload["label"])
 
+    def test_log_returns_three_decisions_with_all_required_audit_fields(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            log_dir = Path(temp_dir)
+            log_path = log_dir / "audit.jsonl"
+            with (
+                patch.object(config, "LOG_DIR", log_dir),
+                patch.object(config, "AUDIT_LOG", log_path),
+                patch("detector.model_signal", return_value=0.8),
+                patch("stylometry.style_signal", return_value=0.2),
+            ):
+                client = app.test_client()
+                responses = [
+                    client.post(
+                        "/submit",
+                        json={
+                            "text": f"A sufficiently long example text {index}.",
+                            "creator_id": "audit-shape-test",
+                        },
+                    )
+                    for index in range(3)
+                ]
+                logged = client.get("/log").get_json()
+                health = client.get("/health").get_json()
+
+            self.assertTrue(all(response.status_code == 200 for response in responses))
+            self.assertTrue(health["rate_limiting"])
+            self.assertEqual(logged["count"], 3)
+            required_fields = {
+                "timestamp",
+                "content_id",
+                "creator_id",
+                "guess",
+                "model_score",
+                "style_score",
+                "combined_score",
+                "label",
+                "status",
+            }
+            for entry in logged["entries"]:
+                self.assertTrue(required_fields.issubset(entry))
+                self.assertEqual(entry["status"], "decided")
+
 
 class Milestone5Tests(unittest.TestCase):
     def test_score_to_label_covers_configured_boundaries(self):

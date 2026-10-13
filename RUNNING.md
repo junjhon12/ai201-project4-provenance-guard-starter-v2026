@@ -153,16 +153,13 @@ one signal. Then log it.
 
 ---
 
-## Turning on rate limiting (unit 8)
+## Rate limiting (unit 8)
 
-Three steps:
+Rate limiting is enabled for `/submit`, with a limit of 10 submissions per
+creator per minute and 200 per creator per day. The limits can be adjusted in
+`config.py`.
 
-1. In `config.py`, set `RATE_LIMITING_ENABLED = True` — or run with
-   `AI201_RATE_LIMITS=1`.
-2. Choose your numbers there.
-3. In `app.py`, uncomment the `@limiter.limit(...)` line above `submit`.
-
-Then push past your limit and watch for `429`:
+To verify the configured limit, push past it and watch for `429`:
 
 ```bash
 python run_attacks.py --flood 15
@@ -176,8 +173,9 @@ The attack set can't do this for you. Every attack row submits under its own
 `creator_id`, so a full attack run looks like forty-odd different callers and
 never trips a limit however long it is.
 
-No `429` at all? Either your limit is above 15 a minute, or rate limiting is
-still off. `GET /health` reports which.
+No `429` at all? `GET /health` reports whether limiting is enabled. The flood
+test sends every request with the same `creator_id`; requests with different
+IDs use different buckets.
 
 Rejections are logged for you. **An attack that shows up only as an absence is
 one you'll never find** — a thousand requests that got a `429` and left no
@@ -288,7 +286,7 @@ sentences, a pasted quotation. That is very cheap to do on purpose.
 | *Every* submission takes 10+ seconds | Something is reloading the model each call. `GET /health` shows `detector_loaded` — if it goes back to `false`, look for a reload in your handler |
 | `DetectorUnavailable` | Run `python detector.py` once to download the model |
 | `/appeal` seems to do nothing | Does the `content_id` you sent actually exist in the log? A typo there fails silently |
-| Every request gets through, no `429` ever | The decorator is uncommented but limiting is still off. Set `RATE_LIMITING_ENABLED` in `config.py` |
+| Every request gets through, no `429` ever | Check `rate_limiting` from `GET /health` and confirm the requests share the same `creator_id` bucket |
 | Flask-Limiter warns about storage | Shouldn't happen — `storage_uri` is preconfigured. If you changed it, put it back |
 | All three of your labels never appear | Your ranges have a gap. `scoring.label_ranges()` prints them |
 

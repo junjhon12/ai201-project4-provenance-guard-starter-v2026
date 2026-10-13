@@ -38,15 +38,8 @@ app = Flask(__name__)
 
 
 # ── Rate limiting — UNIT 8 ────────────────────────────────────────────────────
-# Off until you turn it on. In unit 8, Milestone 1:
-#
-#   1. Set RATE_LIMITING_ENABLED = True in config.py (or AI201_RATE_LIMITS=1)
-#   2. Choose your numbers there
-#   3. Uncomment the @limiter.limit(...) line on /submit below
-#
-# The order doesn't matter. While limiting is off, that decorator is a no-op
-# that quietly does nothing, so uncommenting it early costs you nothing — but
-# it also means no 429 until you've done step 1.
+# /submit is limited by creator_id with the per-minute and per-day values in
+# config.py. If limiting is disabled there, this decorator becomes a no-op.
 #
 # The storage backend is preconfigured, which stops Flask-Limiter printing a
 # warning on every start. In-memory is right for one laptop and wrong for
@@ -56,9 +49,8 @@ class _LimiterOff:
     """
     Stands in for the real limiter while rate limiting is off.
 
-    It makes @limiter.limit(...) a decorator that returns the route
-    untouched, so uncommenting the line before you flip the setting is
-    harmless instead of a crash on startup.
+    Its decorator returns the route untouched, allowing the active route
+    decorator to remain in place while limiting is disabled.
     """
 
     def limit(self, *args, **kwargs):
@@ -72,12 +64,10 @@ if config.RATE_LIMITING_ENABLED:
 
     def rate_limit_key():
         """
-        Who a request counts against.
+        Use creator_id when available and the remote address as a fallback.
 
-        Falling back to the caller's address is the easy version. Unit 8's
-        stretch asks about per-creator limits instead — and the difference
-        matters: one script can look like a thousand callers, and one household
-        can look like one.
+        This is a per-creator limit, so a client that rotates IDs can avoid
+        sharing a bucket.
         """
         payload = request.get_json(silent=True)
         # A body that parses as JSON but isn't an object — a bare list or
@@ -154,7 +144,7 @@ def health():
 # ── SUBMISSION ROUTE ──────────────────────────────────────────────────────────
 
 @app.post("/submit")
-# @limiter.limit(f"{config.RATE_LIMIT_PER_MINUTE}/minute;{config.RATE_LIMIT_PER_DAY}/day")
+@limiter.limit(f"{config.RATE_LIMIT_PER_MINUTE}/minute;{config.RATE_LIMIT_PER_DAY}/day")
 def submit():
     """Score text with both signals, assign a label, and log the decision.
 
@@ -359,7 +349,7 @@ def get_log():
 def main():
     print(f"Provenance Guard on http://{config.HOST}:{config.PORT}")
     print(f"  detector model:  {config.DETECTOR_MODEL}")
-    print(f"  rate limiting:   {'ON' if config.RATE_LIMITING_ENABLED else 'off (unit 8)'}")
+    print(f"  rate limiting:   {'ON' if config.RATE_LIMITING_ENABLED else 'off (config.py)'}")
     print(f"  audit log:       {config.AUDIT_LOG}")
     print()
     print("Check it's alive:")
