@@ -448,18 +448,30 @@ The flood test recorded 10 decisions and 5 `rate_limited` rejections in
 <!-- Every attack with its outcome and a held-or-broke mark.
      `run_attacks.py --label before` produces the table. -->
 
+**Available attack evidence — rate-limit flood:** `results/flood_2026-10-13_0729.md`
+records 15 submissions from one creator: ten returned 200 and five returned
+429. **Held at the route:** the limiter allows ten submissions per minute for
+that creator, then rejects and logs the remaining five. This does not show
+whether any provenance or evasion attack was held; no full attack-run report
+is present in the repository.
+
 
 
 **Ten audit log entries from the run**
 
 <!-- Choose entries that show the interesting failures, not the ten easiest. -->
 
-```json
-
-```
+The flood report records the status-code sequence, but the repository does not
+contain ten pasted entries tied to a full attack run. The available audit log
+does contain `rate_limited` rejection records; I am not presenting unrelated
+historical entries as if they came from that run.
 
 **The single worst outcome** — the one I'd least want to explain to a writer
 whose work got caught by it:
+
+No worst provenance-classification outcome can be selected from the available
+attack evidence. The recorded flood tested request volume, not a known
+human-written or AI-written attack sample.
 
 
 
@@ -469,20 +481,30 @@ whose work got caught by it:
 
 <!-- Your five criteria across three trials. `run_eval.py --label before`. -->
 
+No `run_eval.py` output is tracked, and `scenarios.py` still contains
+placeholders. The run columns therefore say what evidence exists rather than
+inventing three trials. Criterion 3 has a pre-existing invalid-input check in
+`logs/audit.jsonl`; it is not three repeated runs.
+
 | Criterion | Target | Run 1 | Run 2 | Run 3 | Verdict |
 |---|---|---|---|---|---|
-| 1.  |  |  |  |  |  |
-| 2.  |  |  |  |  |  |
-| 3.  |  |  |  |  |  |
-| 4.  |  |  |  |  |  |
-| 5.  |  |  |  |  |  |
+| 1. False positives | No more than 20 of 100 human-written samples labeled True (AI); at least 80 labeled False. | Not recorded | Not recorded | Not recorded | **UNVERIFIED** — no 100-piece human sample or trial results. |
+| 2. Factuality | At least 85% of verifiable factual claims in 100 outputs supported by evidence. | Not recorded | Not recorded | Not recorded | **MISSED by implementation inspection** — this service classifies authorship; it has no factual-claim or source-verification behavior. No 100-output measurement exists. |
+| 3. Bad input | Missing, empty, and over-10,000-character text each rejected with the specified message and no normal answer. | Existing check: all three rejection reasons logged | Not recorded | Not recorded | **MET for the checked cases** — route responses use the specified messages and reject before scoring; `logs/audit.jsonl` records `missing_text`, `empty_text`, and `text_too_large`. This is not evidence of three trial runs. |
+| 4. Fake evidence | Flag or refuse fabricated citations, nonexistent sources, or unsupported quotes in at least 95% of 50 cases. | Not recorded | Not recorded | Not recorded | **MISSED by implementation inspection** — the route and signals do not check citations, sources, or quote support. No 50-case measurement exists. |
+| 5. Explanation quality | At least 80% of readers in 30 tests can state the decision, its main reason, and what evidence or condition would change it. | No reader study | No reader study | No reader study | **UNVERIFIED** — no reader study exists; the fixed label text does not specify what evidence or condition would change a result. |
+
+Criterion 1 is measurable, but no trial evidence supports either verdict. Criteria
+2 and 4 are misses based on the implemented behavior, not measured percentages:
+the service has no factuality or fake-evidence validation path. Criterion 5's
+reader-comprehension percentage cannot be inferred from source inspection, so it
+remains unverified despite the missing change-condition explanation.
 
 **Real output from one trial**, pasted as text, naming the file and function
 that produced it:
 
-```json
-
-```
+No criterion-trial output is available to paste. The audit log's flood records
+are route-rate-limit evidence, not a substitute for a `run_eval.py` trial.
 
 **Diagnoses**
 
@@ -499,6 +521,36 @@ that produced it:
                         signal at 0.6, so it dragged the whole score down."
 
      Look for a pattern. Five failures on one signal is one problem, not five. -->
+
+- **Criterion 2 — factuality (MISSED by implementation inspection).** Stage:
+  route / service contract. Mechanism: `/submit` accepts text for authorship
+  scoring; it does not extract factual claims or retrieve/check supporting
+  sources. Neither signal, the combining rule, nor the label mapping measures
+  whether a claim is true.
+- **Criterion 4 — fake evidence (MISSED by implementation inspection).** Stage:
+  route / service contract. Mechanism: the request path has no citation,
+  source-existence, or quote-to-source check, so fabricated evidence is never
+  specifically flagged or refused. This is the same missing verification
+  capability as criterion 2, not 50 separate signal failures.
+- **Criterion 5 — explanation quality (UNVERIFIED).** Stage: label mapping.
+  Mechanism: `scoring.score_to_label` returns fixed label text based on score
+  bands; the text does not identify evidence or a condition that would change
+  the result. That is a concrete gap, but without 30 reader tests I cannot say
+  what percentage can state all three required parts.
+- **Recorded flood attack — HELD.** Stage: route limiter, before `/submit`.
+  Mechanism: ten requests in the creator's one-minute bucket returned 200;
+  the next five returned 429 and were logged as `rate_limited`. This establishes
+  the configured limit for this one-creator flood, not resistance to rotating
+  creator IDs or to the unrecorded provenance/evasion attacks.
+- **Criterion 1 — false positives (UNVERIFIED).** There is no human-authored
+  100-piece sample or three-trial result, so no stage can be blamed from this
+  evidence. The repeated `flood_tester` entry is not a human-writing test.
+- **Criterion 3 — bad input (MET for the checked cases).** Stage: route.
+  Mechanism: `/submit` checks for missing, empty, and over-limit text before
+  calling either signal; the rejection helper returns an error response and
+  logs the rejection. The existing audit entries confirm the three rejection
+  reasons, while the route contains the criterion's exact messages. No
+  remaining miss is evidenced for this criterion.
 
 
 
