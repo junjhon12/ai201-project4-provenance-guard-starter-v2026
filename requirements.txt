@@ -21,3 +21,9 @@ torch>=2.2,<3.0
 # A real server for the service — UNIT 9. Unused before then; Flask's built-in
 # server prints "development server" at you because it means it.
 gunicorn>=21.2,<24.0
+
+# The CA bundle every HTTPS call above verifies against. It arrives as a
+# transitive dependency, so it is pinned forward here to stop a cached older
+# wheel from satisfying this file. Anything before 2026.10.19 still trusts the
+# revoked emSign intermediates.
+certifi>=2026.10.19
