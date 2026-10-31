@@ -1,4 +1,83 @@
-# Acceptance criteria — Provenance Guard
+# Acceptance criteria — Provenance Guard capstone
+
+These are the five criteria for the Unit 9 capstone extension. They were
+written **before** any capstone results were produced. Four are about the new
+operational layer; one checks that the existing decision path still works.
+
+The extension is Shape A (deploy and instrument): structured run logging,
+`GET /runs`, `GET /metrics`, a documented local run path, and a measured
+per-run compute cost. The targets below are about that layer, not about
+re-tuning the detector.
+
+## 1. Every successful run is fully recorded
+
+**Criterion — Structured log completeness (extension):** For a batch of 10
+consecutive successful `/submit` requests, **10 of 10** records returned by
+`GET /runs` must contain non-null `timestamp`, `request_id`, `input.chars`,
+`output.guess`, `output.combined_score`, `duration_ms`, and
+`stages.model_ms`. This must hold in each of three trials.
+
+**Why this target:** A record that exists but is missing its duration or its
+output cannot answer the question the log exists for. I require all ten rather
+than nine because these fields are written on the same success path; a missing
+one means a structural bug, not occasional model noise.
+
+## 2. Warm submissions stay under five seconds
+
+**Criterion — Warm latency (extension):** After one warm-up request, at least
+**9 of 10** `/submit` requests must complete end to end in **≤5,000 ms**. This
+must hold in each of three trials. The first request after a restart is
+excluded because it loads ~550 MB of model weights.
+
+**Why this target:** The existing service documents one to two seconds per warm
+submission. Five seconds leaves room for a slower CPU and normal model
+variance, while still failing if the inline model makes the request path
+pathological. A stricter one-second target would measure this laptop, not the
+service contract.
+
+## 3. Failures leave a record, not an absence
+
+**Criterion — Failure observability (extension, bad path):** In each of three
+trials, **5 of 5** deliberate failures — missing `text`, empty `text`, invalid
+JSON, oversized text, and one rate-limit rejection — must (a) return a 4xx or
+503 rather than a 5xx, and (b) produce a `GET /runs` record with
+`event="rejected"`, non-null `timestamp`, `request_id`, and `duration_ms`, and
+a non-empty `error`.
+
+**Why this target:** This is the bad path, and the one that matters most for
+operation. A rejected request is exactly the event I need to find later; if it
+leaves no record, the log describes only the happy path. Five of five is
+appropriate because each failure runs through the same rejection helper.
+
+## 4. Metrics agree with the log they summarize
+
+**Criterion — Metrics accuracy (extension):** After a controlled batch of
+requests, `GET /metrics` must report `total_runs`, `decisions`, and `rejections`
+**exactly equal** to the counts in `GET /runs`, and
+`compute_seconds_per_decision` must be within **0.001 s** of the mean of the
+decision records' `duration_ms / 1000`. This must hold in each of three trials.
+
+**Why this target:** A metrics endpoint that disagrees with its own log is worse
+than no endpoint, because it makes a failure look like a clean run. Counts are
+integers, so I require exact equality; the one-millisecond tolerance on the
+average accounts for rounding, not for a different calculation.
+
+## 5. The existing decision path still works
+
+**Criterion — Regression and label coverage (existing system):** In each of
+three trials, the three calibration texts from the Unit 7 README must return
+HTTP 200 with `content_id`, `guess`, `label`, `model_score`, `style_score`, and
+`combined_score`, and across the three texts all three labels (`human`,
+`unsure`, `ai`) must appear at least once.
+
+**Why this target:** An extension that breaks what it extends is a regression.
+I require the full response shape and all three labels because the label
+mapping is the product a reader sees; returning 200 with a missing score or a
+single repeated label would not prove the decision path survived.
+
+---
+
+# Appendix — previous unit criteria (Units 7–8, kept for history)
 
 Five criteria that say what "working" means for this service, written in unit 7
 **before** you built it.
