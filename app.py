@@ -24,17 +24,55 @@ Routes:
     GET  /health      is the service up, and is the model loaded
 """
 
+import time
 import uuid
 
-from flask import Flask, jsonify, request
+from flask import Flask, g, jsonify, request
 
 import audit
 import config
 import detector
+import instrumentation
 import scoring
 import stylometry
 
 app = Flask(__name__)
+
+
+# ── Request instrumentation — UNIT 9 ──────────────────────────────────────────
+# Every request gets an id and a start time before any handler runs, so both
+# successes and failures can be timed and correlated in the run log.
+
+@app.before_request
+def _start_request_timer():
+    g.request_id = str(uuid.uuid4())
+    g.request_started = time.perf_counter()
+
+
+def _request_id() -> str:
+    return getattr(g, "request_id", None) or str(uuid.uuid4())
+
+
+def _elapsed_ms() -> float | None:
+    started = getattr(g, "request_started", None)
+    if started is None:
+        return None
+    return (time.perf_counter() - started) * 1000.0
+
+
+def _input_summary(payload, text: str | None = None) -> dict:
+    """The part of the request worth keeping after the fact."""
+    if isinstance(text, str):
+        return {"chars": len(text), "words": len(text.split()), "preview": text[:120]}
+    if isinstance(payload, dict) and isinstance(payload.get("text"), str):
+        value = payload["text"]
+        return {"chars": len(value), "words": len(value.split()), "preview": value[:120]}
+    return {
+        "chars": None,
+        "words": None,
+        "preview": None,
+        "body_type": type(payload).__name__,
+    }
 
 
 # ── Rate limiting — UNIT 8 ────────────────────────────────────────────────────
@@ -96,10 +134,27 @@ if config.RATE_LIMITING_ENABLED:
         payload = request.get_json(silent=True)
         if not isinstance(payload, dict):
             payload = {}
+        creator_id = payload.get("creator_id", "unknown")
+        request_id = _request_id()
+        duration_ms = _elapsed_ms()
         audit.log_rejection(
-            creator_id=payload.get("creator_id", "unknown"),
+            creator_id=creator_id,
             reason="rate_limited",
             limit=str(exc.description),
+            request_id=request_id,
+            duration_ms=round(duration_ms, 3) if duration_ms is not None else None,
+        )
+        instrumentation.record_run(
+            request_id=request_id,
+            event="rejected",
+            endpoint=request.path,
+            creator_id=creator_id,
+            input=_input_summary(payload),
+            output={"error": "rate_limited", "limit": str(exc.description)},
+            duration_ms=duration_ms,
+            stages={"limiter_ms": duration_ms},
+            status="rejected",
+            error="rate_limited",
         )
         return jsonify({
             "error": "rate_limited",
@@ -138,6 +193,7 @@ def health():
         "detector_loaded": loaded,
         "rate_limiting": config.RATE_LIMITING_ENABLED,
         "log_entries": len(audit.read_entries()),
+        "run_entries": len(instrumentation.read_runs()),
     })
 
 
@@ -191,6 +247,8 @@ def submit():
     a malformed input is one of the most common real failures there is.
     """
     payload = request.get_json(silent=True)
+    request_id = _request_id()
+    started = time.perf_counter()
     creator_id = "unknown"
     creator_valid = False
     if isinstance(payload, dict):
@@ -200,7 +258,26 @@ def submit():
             creator_valid = True
 
     def reject(error: str, message: str, status: int = 400):
-        audit.log_rejection(creator_id=creator_id, reason=error, error=error)
+        duration_ms = (time.perf_counter() - started) * 1000.0
+        audit.log_rejection(
+            creator_id=creator_id,
+            reason=error,
+            error=error,
+            request_id=request_id,
+            duration_ms=round(duration_ms, 3),
+        )
+        instrumentation.record_run(
+            request_id=request_id,
+            event="rejected",
+            endpoint="/submit",
+            creator_id=creator_id,
+            input=_input_summary(payload),
+            output={"error": error, "message": message},
+            duration_ms=duration_ms,
+            stages={"validation_ms": round(duration_ms, 3)},
+            status="rejected",
+            error=error,
+        )
         return jsonify({"error": error, "message": message}), status
 
     if not isinstance(payload, dict):
@@ -223,6 +300,9 @@ def submit():
     if not creator_valid:
         return reject("invalid_creator_id", "A non-empty creator_id is required.")
 
+    validation_ms = (time.perf_counter() - started) * 1000.0
+
+    model_started = time.perf_counter()
     try:
         model_score = detector.model_signal(text)
     except detector.DetectorUnavailable:
@@ -236,11 +316,34 @@ def submit():
             "text_too_short",
             "Text is too short to score; provide a few sentences.",
         )
+    model_ms = (time.perf_counter() - model_started) * 1000.0
 
+    style_started = time.perf_counter()
     style_score = stylometry.style_signal(text)
+    style_ms = (time.perf_counter() - style_started) * 1000.0
+
+    combine_started = time.perf_counter()
     combined_score = scoring.combine_signals(model_score, style_score)
     guess, label = scoring.score_to_label(combined_score)
     content_id = str(uuid.uuid4())
+    combine_ms = (time.perf_counter() - combine_started) * 1000.0
+
+    duration_ms = (time.perf_counter() - started) * 1000.0
+    stages = {
+        "validation_ms": round(validation_ms, 3),
+        "model_ms": round(model_ms, 3),
+        "style_ms": round(style_ms, 3),
+        "combine_ms": round(combine_ms, 3),
+    }
+    output = {
+        "content_id": content_id,
+        "guess": guess,
+        "model_score": model_score,
+        "style_score": style_score,
+        "combined_score": combined_score,
+        "label": label,
+    }
+
     audit.log_decision(
         content_id=content_id,
         creator_id=creator_id,
@@ -250,6 +353,21 @@ def submit():
         combined_score=combined_score,
         label=label,
         status="decided",
+        request_id=request_id,
+        duration_ms=round(duration_ms, 3),
+        stages=stages,
+    )
+    instrumentation.record_run(
+        request_id=request_id,
+        event="decision",
+        endpoint="/submit",
+        creator_id=creator_id,
+        input=_input_summary(payload, text),
+        output=output,
+        duration_ms=duration_ms,
+        stages=stages,
+        status="decided",
+        error=None,
     )
     return jsonify({
         "content_id": content_id,
@@ -282,27 +400,46 @@ def appeal():
     wrong accusation and nothing at all.
     """
     payload = request.get_json(silent=True)
+    request_id = _request_id()
+    started = time.perf_counter()
+    creator_id = "unknown"
+
+    def reject(error: str, message: str, status: int = 400):
+        duration_ms = (time.perf_counter() - started) * 1000.0
+        audit.log_rejection(
+            creator_id=creator_id,
+            reason=error,
+            error=error,
+            request_id=request_id,
+            duration_ms=round(duration_ms, 3),
+        )
+        instrumentation.record_run(
+            request_id=request_id,
+            event="rejected",
+            endpoint="/appeal",
+            creator_id=creator_id,
+            input=_input_summary(payload),
+            output={"error": error, "message": message},
+            duration_ms=duration_ms,
+            stages={"validation_ms": round(duration_ms, 3)},
+            status="rejected",
+            error=error,
+        )
+        return jsonify({"error": error, "message": message}), status
+
     if not isinstance(payload, dict):
-        return jsonify({
-            "error": "invalid_json",
-            "message": "Request body must be a JSON object.",
-        }), 400
+        return reject("invalid_json", "Request body must be a JSON object.")
 
     content_id = payload.get("content_id")
     if not isinstance(content_id, str) or not content_id.strip():
-        return jsonify({
-            "error": "invalid_content_id",
-            "message": "A non-empty content_id is required.",
-        }), 400
+        return reject("invalid_content_id", "A non-empty content_id is required.")
     content_id = content_id.strip()
 
     reasoning = payload.get("reasoning")
     if not isinstance(reasoning, str) or not reasoning.strip():
-        return jsonify({
-            "error": "invalid_reasoning",
-            "message": "A non-empty reasoning string is required.",
-        }), 400
+        return reject("invalid_reasoning", "A non-empty reasoning string is required.")
 
+    lookup_started = time.perf_counter()
     original = next(
         (
             entry
@@ -311,16 +448,43 @@ def appeal():
         ),
         None,
     )
+    lookup_ms = (time.perf_counter() - lookup_started) * 1000.0
     if original is None:
-        return jsonify({
-            "error": "unknown_content_id",
-            "message": "No decision was found for this content_id.",
-        }), 404
+        return reject(
+            "unknown_content_id",
+            "No decision was found for this content_id.",
+            status=404,
+        )
+    creator_id = original["creator_id"]
 
+    write_started = time.perf_counter()
     audit.log_appeal(
         content_id=content_id,
-        creator_id=original["creator_id"],
+        creator_id=creator_id,
         reasoning=reasoning.strip(),
+    )
+    write_ms = (time.perf_counter() - write_started) * 1000.0
+    duration_ms = (time.perf_counter() - started) * 1000.0
+
+    instrumentation.record_run(
+        request_id=request_id,
+        event="appeal",
+        endpoint="/appeal",
+        creator_id=creator_id,
+        input={
+            "content_id": content_id,
+            "reasoning_chars": len(reasoning.strip()),
+            "reasoning_preview": reasoning.strip()[:120],
+        },
+        output={"content_id": content_id, "status": "under_review"},
+        duration_ms=duration_ms,
+        stages={
+            "pre_lookup_ms": round(max(duration_ms - lookup_ms - write_ms, 0.0), 3),
+            "lookup_ms": round(lookup_ms, 3),
+            "write_ms": round(write_ms, 3),
+        },
+        status="under_review",
+        error=None,
     )
     return jsonify({
         "content_id": content_id,
@@ -346,11 +510,35 @@ def get_log():
     return jsonify({"count": len(entries), "entries": entries})
 
 
+# ── Observability endpoints — UNIT 9 ─────────────────────────────────────────
+
+@app.get("/runs")
+def get_runs():
+    """
+    The structured run log, oldest first.
+
+        curl "http://127.0.0.1:5000/runs?limit=10"
+
+    Unlike `/log`, this records the operational facts: input shape, output
+    shape, total duration, per-stage milliseconds, and failure reasons.
+    """
+    limit = request.args.get("limit", type=int)
+    entries = instrumentation.read_runs(limit=limit)
+    return jsonify({"count": len(entries), "entries": entries})
+
+
+@app.get("/metrics")
+def get_metrics():
+    """Aggregate counts, latency, stage timings, and compute cost per run."""
+    return jsonify(instrumentation.summarize_runs())
+
+
 def main():
     print(f"Provenance Guard on http://{config.HOST}:{config.PORT}")
     print(f"  detector model:  {config.DETECTOR_MODEL}")
     print(f"  rate limiting:   {'ON' if config.RATE_LIMITING_ENABLED else 'off (config.py)'}")
     print(f"  audit log:       {config.AUDIT_LOG}")
+    print(f"  run log:         {config.RUN_LOG}")
     print()
     print("Check it's alive:")
     print(f'  curl -X POST http://{config.HOST}:{config.PORT}/ping \\')
