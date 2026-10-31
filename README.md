@@ -45,9 +45,9 @@ them, returns a reader-facing label, records decisions in an audit log, accepts
 appeals, and rate-limits `/submit`.
 
 **What is new in this unit:** an operational layer around the existing service.
-Every request now writes a structured run record with a request id, input shape,
-output shape, total duration, per-stage timings, and status — including rejected
-requests. Two read-only observability endpoints (`GET /runs` and `GET /metrics`)
+Every successful decision and every handled rejection now writes a structured
+run record with a request id, input shape, output shape, total duration,
+per-stage timings, and status. Two read-only observability endpoints (`GET /runs` and `GET /metrics`)
 expose those records without changing code. The run path is documented for a
 clean checkout, and one run's cost is measured in seconds of local compute
 rather than estimated from a pricing page.
@@ -93,8 +93,9 @@ URL below uses `127.0.0.1:5055`. The default in `RUNNING.md` is still 5000.
 
 ## Instrumentation
 
-Every `/submit` and `/appeal` request writes one JSON object per line to
-`logs/runs.jsonl`. A decision record holds:
+Every successful decision, every handled rejection, and every rate-limit
+rejection writes one JSON object per line to `logs/runs.jsonl`. A decision
+record holds:
 
 | Field | What it records |
 |---|---|
