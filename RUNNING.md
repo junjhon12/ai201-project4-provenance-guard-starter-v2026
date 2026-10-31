@@ -8,6 +8,77 @@ assumed — the starter ships one that already answers.
 
 ---
 
+## Capstone run path — Path B (local with logs)
+
+Provenance Guard runs **locally**, started by one command, with a committed
+record of it running. It is not hosted: the detector loads about 550 MB of GPT-2
+weights into memory, while a free host provides 512 MB, so the process would be
+killed before its first request. Path B is the right path for this system.
+
+### What the environment needs
+
+| Requirement | This machine / repo |
+|---|---|
+| Python | 3.11–3.13 supported; tested on **3.13.15** |
+| Dependencies | pinned in `requirements.txt` (Flask, Flask-Limiter, requests, transformers, CPU torch, gunicorn) |
+| Model file | `gpt2`, **550,959,901 bytes (~550 MB)**, cached once under `~/.cache/huggingface/hub` |
+| API key | none — no hosted service is called |
+| Memory | ~4 GB RAM recommended; the model stays loaded in the process |
+| Writable paths | `logs/` and `results/` (both committed, not ignored) |
+
+### From a clean checkout (PowerShell)
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+python detector.py          # one-time download of ~550 MB of GPT-2 weights
+```
+
+### The single start command
+
+```powershell
+python app.py
+```
+
+The service prints `Provenance Guard on http://127.0.0.1:5000`. Leave it running.
+
+### Prove it ran
+
+In a second terminal:
+
+```powershell
+curl.exe -X POST http://127.0.0.1:5000/submit -H "Content-Type: application/json" -d '{\"text\": \"This is a complete sentence. Here is another sentence for the model to score.\", \"creator_id\": \"running-check\"}'
+curl.exe "http://127.0.0.1:5000/runs?limit=10"
+curl.exe "http://127.0.0.1:5000/metrics"
+```
+
+`GET /runs` returns the structured run records; `GET /metrics` returns counts,
+latency distribution, stage timings, and `compute_seconds_per_decision`.
+`logs/runs.jsonl` is the file those endpoints read.
+
+### Measure the cost of one run
+
+With the service still running:
+
+```powershell
+python benchmark.py
+```
+
+That sends one warm-up request, then ten measured `/submit` requests, and writes
+`results/cost_<date>.md` with the average seconds of local compute, per-stage
+breakdown, and the hundred-a-day arithmetic.
+
+### Clean-checkout check
+
+I cloned this repository into a new folder and followed the commands above.
+The first attempt failed because `detector.py` had not been run in that clone,
+so `/submit` returned `503 detector_unavailable`; running `python detector.py`
+once fixed it. `RUNNING.md` now states that step explicitly before the start
+command. See `README.md` → **Instrumentation** for the committed run extract.
+
+---
+
 ## Before your first class
 
 ```bash
