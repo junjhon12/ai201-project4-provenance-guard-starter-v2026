@@ -1,0 +1,1282 @@
+{
+  "label": "before",
+  "started": "2026-10-31T01:44:30.775676",
+  "url": "http://127.0.0.1:5055",
+  "trials": 3,
+  "criteria": {
+    "1": {
+      "title": "Structured log completeness",
+      "target": "10/10 complete records",
+      "trials": [
+        {
+          "trial": 1,
+          "expected": 10,
+          "found": 10,
+          "complete": 10,
+          "pass": true,
+          "responses": [
+            {
+              "status": 200,
+              "guess": "unsure"
+            },
+            {
+              "status": 200,
+              "guess": "unsure"
+            },
+            {
+              "status": 200,
+              "guess": "unsure"
+            },
+            {
+              "status": 200,
+              "guess": "unsure"
+            },
+            {
+              "status": 200,
+              "guess": "unsure"
+            },
+            {
+              "status": 200,
+              "guess": "unsure"
+            },
+            {
+              "status": 200,
+              "guess": "unsure"
+            },
+            {
+              "status": 200,
+              "guess": "unsure"
+            },
+            {
+              "status": 200,
+              "guess": "unsure"
+            },
+            {
+              "status": 200,
+              "guess": "unsure"
+            }
+          ],
+          "checks": [
+            {
+              "request_id": "5a3f8980-f4df-455d-8484-6bbebf79cdf1",
+              "creator_id": "capstone_before_20261031_014430_c1_t1_c1_1",
+              "complete": true,
+              "missing": []
+            },
+            {
+              "request_id": "78fb7e64-95de-4da7-9512-8105dab49fb2",
+              "creator_id": "capstone_before_20261031_014430_c1_t1_c1_2",
+              "complete": true,
+              "missing": []
+            },
+            {
+              "request_id": "ea2bcc1a-4d7c-4f48-8641-581c69c109c1",
+              "creator_id": "capstone_before_20261031_014430_c1_t1_c1_3",
+              "complete": true,
+              "missing": []
+            },
+            {
+              "request_id": "91f881e2-48b0-4ce4-ba19-8a913357cf59",
+              "creator_id": "capstone_before_20261031_014430_c1_t1_c1_4",
+              "complete": true,
+              "missing": []
+            },
+            {
+              "request_id": "4bc31732-84d7-4474-920a-e7161c14f875",
+              "creator_id": "capstone_before_20261031_014430_c1_t1_c1_5",
+              "complete": true,
+              "missing": []
+            },
+            {
+              "request_id": "facfbf7a-74e3-414a-9ebf-fd469b675625",
+              "creator_id": "capstone_before_20261031_014430_c1_t1_c1_6",
+              "complete": true,
+              "missing": []
+            },
+            {
+              "request_id": "334ed895-295e-487e-984c-574f251952b7",
+              "creator_id": "capstone_before_20261031_014430_c1_t1_c1_7",
+              "complete": true,
+              "missing": []
+            },
+            {
+              "request_id": "e189c024-812a-4ccb-9058-b606938b96e7",
+              "creator_id": "capstone_before_20261031_014430_c1_t1_c1_8",
+              "complete": true,
+              "missing": []
+            },
+            {
+              "request_id": "364f50f0-ce32-4e6c-8e3c-b3e936ab8769",
+              "creator_id": "capstone_before_20261031_014430_c1_t1_c1_9",
+              "complete": true,
+              "missing": []
+            },
+            {
+              "request_id": "b414b9f1-a0c4-4966-8853-1f47f9ae7f9d",
+              "creator_id": "capstone_before_20261031_014430_c1_t1_c1_10",
+              "complete": true,
+              "missing": []
+            }
+          ],
+          "sample_entry": {
+            "creator_id": "capstone_before_20261031_014430_c1_t1_c1_1",
+            "duration_ms": 94.386,
+            "endpoint": "/submit",
+            "error": null,
+            "event": "decision",
+            "input": {
+              "chars": 272,
+              "preview": "Oh, what a morning! I missed the bus. Again. A cyclist splashed straight through a puddle; my coffee went flying, and so",
+              "words": 48
+            },
+            "output": {
+              "combined_score": 0.38685,
+              "content_id": "1146140a-8953-41ea-a306-0c47be9a7a37",
+              "guess": "unsure",
+              "label": "The signals do not support a clear authorship label. This is not an accusation; a fuller sample or independent review could change the result.",
+              "model_score": 0.3997,
+              "style_score": 0.374
+            },
+            "request_id": "5a3f8980-f4df-455d-8484-6bbebf79cdf1",
+            "stages": {
+              "combine_ms": 0.024,
+              "model_ms": 94.101,
+              "style_ms": 0.257,
+              "validation_ms": 0.002
+            },
+            "status": "decided",
+            "timestamp": "2026-10-31T05:44:30+00:00"
+          }
+        },
+        {
+          "trial": 2,
+          "expected": 10,
+          "found": 10,
+          "complete": 10,
+          "pass": true,
+          "responses": [
+            {
+              "status": 200,
+              "guess": "unsure"
+            },
+            {
+              "status": 200,
+              "guess": "unsure"
+            },
+            {
+              "status": 200,
+              "guess": "unsure"
+            },
+            {
+              "status": 200,
+              "guess": "unsure"
+            },
+            {
+              "status": 200,
+              "guess": "unsure"
+            },
+            {
+              "status": 200,
+              "guess": "unsure"
+            },
+            {
+              "status": 200,
+              "guess": "unsure"
+            },
+            {
+              "status": 200,
+              "guess": "unsure"
+            },
+            {
+              "status": 200,
+              "guess": "unsure"
+            },
+            {
+              "status": 200,
+              "guess": "unsure"
+            }
+          ],
+          "checks": [
+            {
+              "request_id": "aa71f69d-0f7b-448a-89cd-f2f87a24681f",
+              "creator_id": "capstone_before_20261031_014430_c1_t2_c1_1",
+              "complete": true,
+              "missing": []
+            },
+            {
+              "request_id": "a62e0bf3-2642-466a-bb83-1c56336652c8",
+              "creator_id": "capstone_before_20261031_014430_c1_t2_c1_2",
+              "complete": true,
+              "missing": []
+            },
+            {
+              "request_id": "b84eee87-72d6-43b1-9808-337e9e4c3246",
+              "creator_id": "capstone_before_20261031_014430_c1_t2_c1_3",
+              "complete": true,
+              "missing": []
+            },
+            {
+              "request_id": "11f139a6-062d-45ae-b85e-ebf24b160833",
+              "creator_id": "capstone_before_20261031_014430_c1_t2_c1_4",
+              "complete": true,
+              "missing": []
+            },
+            {
+              "request_id": "a218b91b-8676-4ebf-817f-fc446d6b2a9f",
+              "creator_id": "capstone_before_20261031_014430_c1_t2_c1_5",
+              "complete": true,
+              "missing": []
+            },
+            {
+              "request_id": "0c9fd7eb-faea-4cdc-b89d-cd05cbc0c968",
+              "creator_id": "capstone_before_20261031_014430_c1_t2_c1_6",
+              "complete": true,
+              "missing": []
+            },
+            {
+              "request_id": "ee41412a-eb9f-46f8-9b80-bcc6c272d820",
+              "creator_id": "capstone_before_20261031_014430_c1_t2_c1_7",
+              "complete": true,
+              "missing": []
+            },
+            {
+              "request_id": "24f4fa54-4a8a-4280-9f31-1afaccf1882e",
+              "creator_id": "capstone_before_20261031_014430_c1_t2_c1_8",
+              "complete": true,
+              "missing": []
+            },
+            {
+              "request_id": "e4150978-e6ba-4784-8cb0-f7918d31d27c",
+              "creator_id": "capstone_before_20261031_014430_c1_t2_c1_9",
+              "complete": true,
+              "missing": []
+            },
+            {
+              "request_id": "ffec496d-421a-420b-a62e-5564b99d25a4",
+              "creator_id": "capstone_before_20261031_014430_c1_t2_c1_10",
+              "complete": true,
+              "missing": []
+            }
+          ],
+          "sample_entry": {
+            "creator_id": "capstone_before_20261031_014430_c1_t2_c1_1",
+            "duration_ms": 88.464,
+            "endpoint": "/submit",
+            "error": null,
+            "event": "decision",
+            "input": {
+              "chars": 272,
+              "preview": "Oh, what a morning! I missed the bus. Again. A cyclist splashed straight through a puddle; my coffee went flying, and so",
+              "words": 48
+            },
+            "output": {
+              "combined_score": 0.38685,
+              "content_id": "f5456f83-f022-4b7e-ad08-c75bbcc4ca93",
+              "guess": "unsure",
+              "label": "The signals do not support a clear authorship label. This is not an accusation; a fuller sample or independent review could change the result.",
+              "model_score": 0.3997,
+              "style_score": 0.374
+            },
+            "request_id": "aa71f69d-0f7b-448a-89cd-f2f87a24681f",
+            "stages": {
+              "combine_ms": 0.02,
+              "model_ms": 88.241,
+              "style_ms": 0.2,
+              "validation_ms": 0.003
+            },
+            "status": "decided",
+            "timestamp": "2026-10-31T05:44:31+00:00"
+          }
+        },
+        {
+          "trial": 3,
+          "expected": 10,
+          "found": 10,
+          "complete": 10,
+          "pass": true,
+          "responses": [
+            {
+              "status": 200,
+              "guess": "unsure"
+            },
+            {
+              "status": 200,
+              "guess": "unsure"
+            },
+            {
+              "status": 200,
+              "guess": "unsure"
+            },
+            {
+              "status": 200,
+              "guess": "unsure"
+            },
+            {
+              "status": 200,
+              "guess": "unsure"
+            },
+            {
+              "status": 200,
+              "guess": "unsure"
+            },
+            {
+              "status": 200,
+              "guess": "unsure"
+            },
+            {
+              "status": 200,
+              "guess": "unsure"
+            },
+            {
+              "status": 200,
+              "guess": "unsure"
+            },
+            {
+              "status": 200,
+              "guess": "unsure"
+            }
+          ],
+          "checks": [
+            {
+              "request_id": "9bd991cb-256b-4cd7-8b77-efa7371dac03",
+              "creator_id": "capstone_before_20261031_014430_c1_t3_c1_1",
+              "complete": true,
+              "missing": []
+            },
+            {
+              "request_id": "c64c2dc3-97aa-4d7e-9c81-f80ab4637954",
+              "creator_id": "capstone_before_20261031_014430_c1_t3_c1_2",
+              "complete": true,
+              "missing": []
+            },
+            {
+              "request_id": "40d14cef-f4e8-418e-bdaa-fff24e713a70",
+              "creator_id": "capstone_before_20261031_014430_c1_t3_c1_3",
+              "complete": true,
+              "missing": []
+            },
+            {
+              "request_id": "0d44cc5f-e008-4fe9-8d9c-a2972b3eaba1",
+              "creator_id": "capstone_before_20261031_014430_c1_t3_c1_4",
+              "complete": true,
+              "missing": []
+            },
+            {
+              "request_id": "9a1e8405-4070-4622-85cb-eee38de1efef",
+              "creator_id": "capstone_before_20261031_014430_c1_t3_c1_5",
+              "complete": true,
+              "missing": []
+            },
+            {
+              "request_id": "6ca6d4d8-bb12-48f7-9454-9525b68c5179",
+              "creator_id": "capstone_before_20261031_014430_c1_t3_c1_6",
+              "complete": true,
+              "missing": []
+            },
+            {
+              "request_id": "4f15d8ac-ded9-4881-ae33-f93348852ae8",
+              "creator_id": "capstone_before_20261031_014430_c1_t3_c1_7",
+              "complete": true,
+              "missing": []
+            },
+            {
+              "request_id": "ae2322df-9f9b-4c95-ba01-aba9237b7bc4",
+              "creator_id": "capstone_before_20261031_014430_c1_t3_c1_8",
+              "complete": true,
+              "missing": []
+            },
+            {
+              "request_id": "fcca2dfe-22e0-4eab-9f49-aeb0af67fa43",
+              "creator_id": "capstone_before_20261031_014430_c1_t3_c1_9",
+              "complete": true,
+              "missing": []
+            },
+            {
+              "request_id": "3fba6e7c-197a-446f-9102-b87608c2649a",
+              "creator_id": "capstone_before_20261031_014430_c1_t3_c1_10",
+              "complete": true,
+              "missing": []
+            }
+          ],
+          "sample_entry": {
+            "creator_id": "capstone_before_20261031_014430_c1_t3_c1_1",
+            "duration_ms": 89.708,
+            "endpoint": "/submit",
+            "error": null,
+            "event": "decision",
+            "input": {
+              "chars": 272,
+              "preview": "Oh, what a morning! I missed the bus. Again. A cyclist splashed straight through a puddle; my coffee went flying, and so",
+              "words": 48
+            },
+            "output": {
+              "combined_score": 0.38685,
+              "content_id": "5854d579-6938-4524-bc51-fec0e52428c1",
+              "guess": "unsure",
+              "label": "The signals do not support a clear authorship label. This is not an accusation; a fuller sample or independent review could change the result.",
+              "model_score": 0.3997,
+              "style_score": 0.374
+            },
+            "request_id": "9bd991cb-256b-4cd7-8b77-efa7371dac03",
+            "stages": {
+              "combine_ms": 0.021,
+              "model_ms": 89.487,
+              "style_ms": 0.197,
+              "validation_ms": 0.002
+            },
+            "status": "decided",
+            "timestamp": "2026-10-31T05:44:32+00:00"
+          }
+        }
+      ],
+      "verdict": "MET"
+    },
+    "2": {
+      "title": "Warm latency",
+      "target": "9/10 under 5,000 ms",
+      "trials": [
+        {
+          "trial": 1,
+          "expected_under": 9,
+          "under_5000": 10,
+          "latencies_ms": [
+            86.178,
+            93.204,
+            88.526,
+            92.326,
+            85.23,
+            88.374,
+            85.06,
+            110.477,
+            90.633,
+            94.803
+          ],
+          "median_ms": 89.579,
+          "max_ms": 110.477,
+          "server_side_ms": [
+            82.135,
+            89.117,
+            84.463,
+            88.441,
+            81.528,
+            84.691,
+            81.484,
+            84.547,
+            86.943,
+            91.133
+          ],
+          "pass": true,
+          "responses": [
+            {
+              "status": 200,
+              "guess": "unsure",
+              "elapsed_ms": 86.178
+            },
+            {
+              "status": 200,
+              "guess": "unsure",
+              "elapsed_ms": 93.204
+            },
+            {
+              "status": 200,
+              "guess": "unsure",
+              "elapsed_ms": 88.526
+            },
+            {
+              "status": 200,
+              "guess": "unsure",
+              "elapsed_ms": 92.326
+            },
+            {
+              "status": 200,
+              "guess": "unsure",
+              "elapsed_ms": 85.23
+            },
+            {
+              "status": 200,
+              "guess": "unsure",
+              "elapsed_ms": 88.374
+            },
+            {
+              "status": 200,
+              "guess": "unsure",
+              "elapsed_ms": 85.06
+            },
+            {
+              "status": 200,
+              "guess": "unsure",
+              "elapsed_ms": 110.477
+            },
+            {
+              "status": 200,
+              "guess": "unsure",
+              "elapsed_ms": 90.633
+            },
+            {
+              "status": 200,
+              "guess": "unsure",
+              "elapsed_ms": 94.803
+            }
+          ]
+        },
+        {
+          "trial": 2,
+          "expected_under": 9,
+          "under_5000": 10,
+          "latencies_ms": [
+            86.542,
+            89.471,
+            85.137,
+            90.204,
+            86.423,
+            86.507,
+            85.713,
+            99.33,
+            88.141,
+            90.277
+          ],
+          "median_ms": 87.341,
+          "max_ms": 99.33,
+          "server_side_ms": [
+            82.634,
+            85.581,
+            81.377,
+            85.84,
+            82.641,
+            82.951,
+            81.877,
+            85.826,
+            84.343,
+            86.639
+          ],
+          "pass": true,
+          "responses": [
+            {
+              "status": 200,
+              "guess": "unsure",
+              "elapsed_ms": 86.542
+            },
+            {
+              "status": 200,
+              "guess": "unsure",
+              "elapsed_ms": 89.471
+            },
+            {
+              "status": 200,
+              "guess": "unsure",
+              "elapsed_ms": 85.137
+            },
+            {
+              "status": 200,
+              "guess": "unsure",
+              "elapsed_ms": 90.204
+            },
+            {
+              "status": 200,
+              "guess": "unsure",
+              "elapsed_ms": 86.423
+            },
+            {
+              "status": 200,
+              "guess": "unsure",
+              "elapsed_ms": 86.507
+            },
+            {
+              "status": 200,
+              "guess": "unsure",
+              "elapsed_ms": 85.713
+            },
+            {
+              "status": 200,
+              "guess": "unsure",
+              "elapsed_ms": 99.33
+            },
+            {
+              "status": 200,
+              "guess": "unsure",
+              "elapsed_ms": 88.141
+            },
+            {
+              "status": 200,
+              "guess": "unsure",
+              "elapsed_ms": 90.277
+            }
+          ]
+        },
+        {
+          "trial": 3,
+          "expected_under": 9,
+          "under_5000": 10,
+          "latencies_ms": [
+            90.422,
+            90.07,
+            88.218,
+            92.092,
+            87.193,
+            88.041,
+            116.238,
+            89.493,
+            91.473,
+            88.286
+          ],
+          "median_ms": 89.781,
+          "max_ms": 116.238,
+          "server_side_ms": [
+            86.686,
+            86.175,
+            84.011,
+            88.031,
+            83.305,
+            84.336,
+            90.3,
+            85.721,
+            87.482,
+            84.585
+          ],
+          "pass": true,
+          "responses": [
+            {
+              "status": 200,
+              "guess": "unsure",
+              "elapsed_ms": 90.422
+            },
+            {
+              "status": 200,
+              "guess": "unsure",
+              "elapsed_ms": 90.07
+            },
+            {
+              "status": 200,
+              "guess": "unsure",
+              "elapsed_ms": 88.218
+            },
+            {
+              "status": 200,
+              "guess": "unsure",
+              "elapsed_ms": 92.092
+            },
+            {
+              "status": 200,
+              "guess": "unsure",
+              "elapsed_ms": 87.193
+            },
+            {
+              "status": 200,
+              "guess": "unsure",
+              "elapsed_ms": 88.041
+            },
+            {
+              "status": 200,
+              "guess": "unsure",
+              "elapsed_ms": 116.238
+            },
+            {
+              "status": 200,
+              "guess": "unsure",
+              "elapsed_ms": 89.493
+            },
+            {
+              "status": 200,
+              "guess": "unsure",
+              "elapsed_ms": 91.473
+            },
+            {
+              "status": 200,
+              "guess": "unsure",
+              "elapsed_ms": 88.286
+            }
+          ]
+        }
+      ],
+      "verdict": "MET"
+    },
+    "3": {
+      "title": "Failure observability",
+      "target": "5/5 failures 4xx/503 and logged",
+      "trials": [
+        {
+          "trial": 1,
+          "expected": 5,
+          "passed": 5,
+          "pass": true,
+          "checks": [
+            {
+              "case": "rate_limited",
+              "status": 429,
+              "status_ok": true,
+              "logged": true,
+              "log_error": "rate_limited",
+              "log_request_id": "cdf02bfd-3e45-4394-ac5a-3d1f2e773bde",
+              "log_duration_ms": 1.143
+            },
+            {
+              "case": "missing_text",
+              "status": 400,
+              "status_ok": true,
+              "logged": true,
+              "log_error": "missing_text",
+              "log_request_id": "f6ae8e65-6d17-4c38-9342-1c2582ecf293",
+              "log_duration_ms": 0.002
+            },
+            {
+              "case": "empty_text",
+              "status": 400,
+              "status_ok": true,
+              "logged": true,
+              "log_error": "empty_text",
+              "log_request_id": "e2052467-6f5e-4d9f-80bb-c12f1bba8eb1",
+              "log_duration_ms": 0.002
+            },
+            {
+              "case": "invalid_json",
+              "status": 400,
+              "status_ok": true,
+              "logged": true,
+              "log_error": "invalid_json",
+              "log_request_id": "c36d5034-1ca1-4edf-9634-d10e77a8e522",
+              "log_duration_ms": 0.001
+            },
+            {
+              "case": "text_too_large",
+              "status": 400,
+              "status_ok": true,
+              "logged": true,
+              "log_error": "text_too_large",
+              "log_request_id": "e9fbc031-946e-436f-902c-03f11dd601e7",
+              "log_duration_ms": 0.007
+            }
+          ],
+          "failures": [
+            {
+              "case": "rate_limited",
+              "status": 429,
+              "payload": {
+                "error": "rate_limited",
+                "limit": "10 per 1 minute",
+                "message": "Too many submissions. Try again shortly."
+              },
+              "creator_id": "capstone_before_20261031_014430_c3_t1_c3_flood"
+            },
+            {
+              "case": "missing_text",
+              "status": 400,
+              "payload": {
+                "error": "missing_text",
+                "message": "No text provided."
+              },
+              "creator_id": "capstone_before_20261031_014430_c3_t1_c3_missing"
+            },
+            {
+              "case": "empty_text",
+              "status": 400,
+              "payload": {
+                "error": "empty_text",
+                "message": "Input is empty."
+              },
+              "creator_id": "capstone_before_20261031_014430_c3_t1_c3_empty"
+            },
+            {
+              "case": "invalid_json",
+              "status": 400,
+              "payload": {
+                "error": "invalid_json",
+                "message": "Request body must be a JSON object."
+              },
+              "creator_id": null
+            },
+            {
+              "case": "text_too_large",
+              "status": 400,
+              "payload": {
+                "error": "text_too_large",
+                "message": "Input exceeds the limit of 10,000 characters."
+              },
+              "creator_id": "capstone_before_20261031_014430_c3_t1_c3_large"
+            }
+          ]
+        },
+        {
+          "trial": 2,
+          "expected": 5,
+          "passed": 5,
+          "pass": true,
+          "checks": [
+            {
+              "case": "rate_limited",
+              "status": 429,
+              "status_ok": true,
+              "logged": true,
+              "log_error": "rate_limited",
+              "log_request_id": "479a9a0b-0c11-452b-9daa-80dd42835aa1",
+              "log_duration_ms": 0.52
+            },
+            {
+              "case": "missing_text",
+              "status": 400,
+              "status_ok": true,
+              "logged": true,
+              "log_error": "missing_text",
+              "log_request_id": "0d785c66-252e-480e-a9d1-5e2dbee5c722",
+              "log_duration_ms": 0.002
+            },
+            {
+              "case": "empty_text",
+              "status": 400,
+              "status_ok": true,
+              "logged": true,
+              "log_error": "empty_text",
+              "log_request_id": "408a849c-9dec-4e86-8071-e4c4fdfda955",
+              "log_duration_ms": 0.002
+            },
+            {
+              "case": "invalid_json",
+              "status": 400,
+              "status_ok": true,
+              "logged": true,
+              "log_error": "invalid_json",
+              "log_request_id": "70845dce-f798-4e72-82d1-3c0c284c48ff",
+              "log_duration_ms": 0.001
+            },
+            {
+              "case": "text_too_large",
+              "status": 400,
+              "status_ok": true,
+              "logged": true,
+              "log_error": "text_too_large",
+              "log_request_id": "d8fe9974-43bc-409b-a5ff-d1bf3fb38c7c",
+              "log_duration_ms": 0.006
+            }
+          ],
+          "failures": [
+            {
+              "case": "rate_limited",
+              "status": 429,
+              "payload": {
+                "error": "rate_limited",
+                "limit": "10 per 1 minute",
+                "message": "Too many submissions. Try again shortly."
+              },
+              "creator_id": "capstone_before_20261031_014430_c3_t2_c3_flood"
+            },
+            {
+              "case": "missing_text",
+              "status": 400,
+              "payload": {
+                "error": "missing_text",
+                "message": "No text provided."
+              },
+              "creator_id": "capstone_before_20261031_014430_c3_t2_c3_missing"
+            },
+            {
+              "case": "empty_text",
+              "status": 400,
+              "payload": {
+                "error": "empty_text",
+                "message": "Input is empty."
+              },
+              "creator_id": "capstone_before_20261031_014430_c3_t2_c3_empty"
+            },
+            {
+              "case": "invalid_json",
+              "status": 400,
+              "payload": {
+                "error": "invalid_json",
+                "message": "Request body must be a JSON object."
+              },
+              "creator_id": null
+            },
+            {
+              "case": "text_too_large",
+              "status": 400,
+              "payload": {
+                "error": "text_too_large",
+                "message": "Input exceeds the limit of 10,000 characters."
+              },
+              "creator_id": "capstone_before_20261031_014430_c3_t2_c3_large"
+            }
+          ]
+        },
+        {
+          "trial": 3,
+          "expected": 5,
+          "passed": 5,
+          "pass": true,
+          "checks": [
+            {
+              "case": "rate_limited",
+              "status": 429,
+              "status_ok": true,
+              "logged": true,
+              "log_error": "rate_limited",
+              "log_request_id": "21293ecc-5f3e-4590-ae94-5f6a250a2268",
+              "log_duration_ms": 0.425
+            },
+            {
+              "case": "missing_text",
+              "status": 400,
+              "status_ok": true,
+              "logged": true,
+              "log_error": "missing_text",
+              "log_request_id": "0e781e2a-a3d1-49ea-903b-098a951abd0e",
+              "log_duration_ms": 0.002
+            },
+            {
+              "case": "empty_text",
+              "status": 400,
+              "status_ok": true,
+              "logged": true,
+              "log_error": "empty_text",
+              "log_request_id": "5ccb2910-c29f-41f6-8c32-fcdc24344ece",
+              "log_duration_ms": 0.002
+            },
+            {
+              "case": "invalid_json",
+              "status": 400,
+              "status_ok": true,
+              "logged": true,
+              "log_error": "invalid_json",
+              "log_request_id": "609eab2a-6a14-4f76-8796-2a07f06d282b",
+              "log_duration_ms": 0.001
+            },
+            {
+              "case": "text_too_large",
+              "status": 400,
+              "status_ok": true,
+              "logged": true,
+              "log_error": "text_too_large",
+              "log_request_id": "e0508214-e04b-4fb6-915b-150fdaed023a",
+              "log_duration_ms": 0.006
+            }
+          ],
+          "failures": [
+            {
+              "case": "rate_limited",
+              "status": 429,
+              "payload": {
+                "error": "rate_limited",
+                "limit": "10 per 1 minute",
+                "message": "Too many submissions. Try again shortly."
+              },
+              "creator_id": "capstone_before_20261031_014430_c3_t3_c3_flood"
+            },
+            {
+              "case": "missing_text",
+              "status": 400,
+              "payload": {
+                "error": "missing_text",
+                "message": "No text provided."
+              },
+              "creator_id": "capstone_before_20261031_014430_c3_t3_c3_missing"
+            },
+            {
+              "case": "empty_text",
+              "status": 400,
+              "payload": {
+                "error": "empty_text",
+                "message": "Input is empty."
+              },
+              "creator_id": "capstone_before_20261031_014430_c3_t3_c3_empty"
+            },
+            {
+              "case": "invalid_json",
+              "status": 400,
+              "payload": {
+                "error": "invalid_json",
+                "message": "Request body must be a JSON object."
+              },
+              "creator_id": null
+            },
+            {
+              "case": "text_too_large",
+              "status": 400,
+              "payload": {
+                "error": "text_too_large",
+                "message": "Input exceeds the limit of 10,000 characters."
+              },
+              "creator_id": "capstone_before_20261031_014430_c3_t3_c3_large"
+            }
+          ]
+        }
+      ],
+      "verdict": "MET"
+    },
+    "4": {
+      "title": "Metrics accuracy",
+      "target": "exact counts; average within 0.001 s",
+      "trials": [
+        {
+          "trial": 1,
+          "metrics": {
+            "appeals": 0,
+            "compute_seconds_per_decision": 0.1363,
+            "decision_latency_ms": {
+              "average": 136.258,
+              "max": 6307.688,
+              "p50": 84.585,
+              "p95": 91.146
+            },
+            "decisions": 119,
+            "error_counts": {
+              "empty_text": 4,
+              "invalid_json": 3,
+              "missing_text": 3,
+              "rate_limited": 3,
+              "text_too_large": 3
+            },
+            "latency_ms": {
+              "average": 120.125,
+              "max": 6307.688,
+              "p50": 84.245,
+              "p95": 91.133
+            },
+            "rejections": 16,
+            "stage_average_ms": {
+              "combine_ms": 0.021,
+              "model_ms": 136.042,
+              "style_ms": 0.192,
+              "validation_ms": 0.003
+            },
+            "total_runs": 135
+          },
+          "run_counts": {
+            "total_runs": 135,
+            "decisions": 119,
+            "rejections": 16
+          },
+          "expected_average_seconds": 0.136258,
+          "reported_average_seconds": 0.1363,
+          "average_delta_seconds": 4.2e-05,
+          "counts_ok": true,
+          "average_ok": true,
+          "pass": true
+        },
+        {
+          "trial": 2,
+          "metrics": {
+            "appeals": 0,
+            "compute_seconds_per_decision": 0.1346,
+            "decision_latency_ms": {
+              "average": 134.573,
+              "max": 6307.688,
+              "p50": 84.585,
+              "p95": 91.146
+            },
+            "decisions": 123,
+            "error_counts": {
+              "empty_text": 5,
+              "invalid_json": 3,
+              "missing_text": 3,
+              "rate_limited": 3,
+              "text_too_large": 3
+            },
+            "latency_ms": {
+              "average": 118.247,
+              "max": 6307.688,
+              "p50": 84.245,
+              "p95": 91.133
+            },
+            "rejections": 17,
+            "stage_average_ms": {
+              "combine_ms": 0.021,
+              "model_ms": 134.357,
+              "style_ms": 0.192,
+              "validation_ms": 0.003
+            },
+            "total_runs": 140
+          },
+          "run_counts": {
+            "total_runs": 140,
+            "decisions": 123,
+            "rejections": 17
+          },
+          "expected_average_seconds": 0.134573,
+          "reported_average_seconds": 0.1346,
+          "average_delta_seconds": 2.7e-05,
+          "counts_ok": true,
+          "average_ok": true,
+          "pass": true
+        },
+        {
+          "trial": 3,
+          "metrics": {
+            "appeals": 0,
+            "compute_seconds_per_decision": 0.133,
+            "decision_latency_ms": {
+              "average": 132.955,
+              "max": 6307.688,
+              "p50": 84.547,
+              "p95": 91.146
+            },
+            "decisions": 127,
+            "error_counts": {
+              "empty_text": 6,
+              "invalid_json": 3,
+              "missing_text": 3,
+              "rate_limited": 3,
+              "text_too_large": 3
+            },
+            "latency_ms": {
+              "average": 116.465,
+              "max": 6307.688,
+              "p50": 84.243,
+              "p95": 91.133
+            },
+            "rejections": 18,
+            "stage_average_ms": {
+              "combine_ms": 0.021,
+              "model_ms": 132.738,
+              "style_ms": 0.192,
+              "validation_ms": 0.003
+            },
+            "total_runs": 145
+          },
+          "run_counts": {
+            "total_runs": 145,
+            "decisions": 127,
+            "rejections": 18
+          },
+          "expected_average_seconds": 0.132955,
+          "reported_average_seconds": 0.133,
+          "average_delta_seconds": 4.5e-05,
+          "counts_ok": true,
+          "average_ok": true,
+          "pass": true
+        }
+      ],
+      "verdict": "MET"
+    },
+    "5": {
+      "title": "Regression and label coverage",
+      "target": "3/3 shape; all three labels",
+      "trials": [
+        {
+          "trial": 1,
+          "rows": [
+            {
+              "input": "human-style control",
+              "status": 200,
+              "guess": "unsure",
+              "label": "The signals do not support a clear authorship label. This is not an accusation; a fuller sample or independent review could change the result.",
+              "content_id": "ab8e0e84-d9d0-4bd7-b004-db6468634651",
+              "model_score": 0.3997,
+              "style_score": 0.374,
+              "combined_score": 0.38685
+            },
+            {
+              "input": "lightly edited AI",
+              "status": 200,
+              "guess": "ai",
+              "label": "The combined scores fall in an AI-like range. This is not proof of AI authorship; independent review or relevant drafting context could change the result.",
+              "content_id": "0e3ce070-0728-4c4c-a374-08a06c215298",
+              "model_score": 0.8293,
+              "style_score": 0.5252,
+              "combined_score": 0.67725
+            },
+            {
+              "input": "clearly AI",
+              "status": 200,
+              "guess": "ai",
+              "label": "The combined scores fall in an AI-like range. This is not proof of AI authorship; independent review or relevant drafting context could change the result.",
+              "content_id": "b185c88a-6227-43c1-905c-97de61166c2a",
+              "model_score": 0.8012,
+              "style_score": 0.5626,
+              "combined_score": 0.6819
+            }
+          ],
+          "labels_seen": [
+            "ai",
+            "unsure"
+          ],
+          "shape_ok": true,
+          "coverage_ok": false,
+          "pass": false
+        },
+        {
+          "trial": 2,
+          "rows": [
+            {
+              "input": "human-style control",
+              "status": 200,
+              "guess": "unsure",
+              "label": "The signals do not support a clear authorship label. This is not an accusation; a fuller sample or independent review could change the result.",
+              "content_id": "5443dd76-36a5-4cc4-be2f-b084b989c294",
+              "model_score": 0.3997,
+              "style_score": 0.374,
+              "combined_score": 0.38685
+            },
+            {
+              "input": "lightly edited AI",
+              "status": 200,
+              "guess": "ai",
+              "label": "The combined scores fall in an AI-like range. This is not proof of AI authorship; independent review or relevant drafting context could change the result.",
+              "content_id": "2d29beb3-3131-49cb-9de8-5ca6c7d57b67",
+              "model_score": 0.8293,
+              "style_score": 0.5252,
+              "combined_score": 0.67725
+            },
+            {
+              "input": "clearly AI",
+              "status": 200,
+              "guess": "ai",
+              "label": "The combined scores fall in an AI-like range. This is not proof of AI authorship; independent review or relevant drafting context could change the result.",
+              "content_id": "52740f76-40b0-4a4d-a7bb-16e1d60d8737",
+              "model_score": 0.8012,
+              "style_score": 0.5626,
+              "combined_score": 0.6819
+            }
+          ],
+          "labels_seen": [
+            "ai",
+            "unsure"
+          ],
+          "shape_ok": true,
+          "coverage_ok": false,
+          "pass": false
+        },
+        {
+          "trial": 3,
+          "rows": [
+            {
+              "input": "human-style control",
+              "status": 200,
+              "guess": "unsure",
+              "label": "The signals do not support a clear authorship label. This is not an accusation; a fuller sample or independent review could change the result.",
+              "content_id": "b8b1bb9d-c7e6-43d6-83ab-08e32c800bda",
+              "model_score": 0.3997,
+              "style_score": 0.374,
+              "combined_score": 0.38685
+            },
+            {
+              "input": "lightly edited AI",
+              "status": 200,
+              "guess": "ai",
+              "label": "The combined scores fall in an AI-like range. This is not proof of AI authorship; independent review or relevant drafting context could change the result.",
+              "content_id": "e5887b8e-0ac1-43cf-873c-9a9c125f908b",
+              "model_score": 0.8293,
+              "style_score": 0.5252,
+              "combined_score": 0.67725
+            },
+            {
+              "input": "clearly AI",
+              "status": 200,
+              "guess": "ai",
+              "label": "The combined scores fall in an AI-like range. This is not proof of AI authorship; independent review or relevant drafting context could change the result.",
+              "content_id": "c1053cad-4202-455e-92a3-57c45508b82e",
+              "model_score": 0.8012,
+              "style_score": 0.5626,
+              "combined_score": 0.6819
+            }
+          ],
+          "labels_seen": [
+            "ai",
+            "unsure"
+          ],
+          "shape_ok": true,
+          "coverage_ok": false,
+          "pass": false
+        }
+      ],
+      "verdict": "MISSED"
+    }
+  }
+}
