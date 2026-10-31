@@ -43,6 +43,16 @@ python app.py
 
 The service prints `Provenance Guard on http://127.0.0.1:5000`. Leave it running.
 
+If port 5000 is already in use, pick another one — on this machine another
+local service held 5000, so the committed evidence was produced with:
+
+```powershell
+$env:PORT=5055
+python app.py
+```
+
+Use `http://127.0.0.1:5055` for the commands below in that case.
+
 ### Prove it ran
 
 In a second terminal:
@@ -71,11 +81,18 @@ breakdown, and the hundred-a-day arithmetic.
 
 ### Clean-checkout check
 
-I cloned this repository into a new folder and followed the commands above.
-The first attempt failed because `detector.py` had not been run in that clone,
-so `/submit` returned `503 detector_unavailable`; running `python detector.py`
-once fixed it. `RUNNING.md` now states that step explicitly before the start
-command. See `README.md` → **Instrumentation** for the committed run extract.
+I cloned this repository into a new folder, created a fresh virtual
+environment, installed `requirements.txt`, and ran `python test.py`: 9 passed,
+0 failed. Then I started `python app.py` on a spare port: `GET /health` answered
+and `POST /submit` returned `200` with both signal scores. The model was
+already in the shared Hugging Face cache, so no download was needed; on a new
+machine, `python detector.py` performs that one-time download first.
+
+The fresh environment installed `torch 2.15.0+cpu`, while the committed
+evidence environment uses `torch 2.14.1+cpu`. The requirements file bounds torch
+but does not pin the exact build, which is one reason the capstone records the
+runtime fingerprint on every decision. See `README.md` → **Instrumentation**
+for the committed run extract.
 
 ---
 
@@ -159,8 +176,10 @@ position.**
 | `POST /ping` | **works** | The example. Don't edit it |
 | `GET /health` | **works** | Is the service up, is the model loaded |
 | `GET /log` | **works** | The audit log, as JSON |
-| `POST /submit` | **you build it** | Milestones 3, 4, 5 |
-| `POST /appeal` | **you build it** | Milestone 5 |
+| `GET /runs` | **works** | The structured run log, as JSON (Unit 9) |
+| `GET /metrics` | **works** | Counts, latency, stage timings, compute cost (Unit 9) |
+| `POST /submit` | **works** | Score text with both signals and return a label |
+| `POST /appeal` | **works** | Record a writer's request for review |
 
 ---
 
@@ -176,6 +195,8 @@ position.**
 | `python run_attacks.py --set <folder>` | The attack set — **unit 8** |
 | `python run_attacks.py --flood 15` | Push past your rate limit and print the status codes — **unit 8** |
 | `python run_eval.py --label before` | Your five criteria, three trials — **unit 8** |
+| `python benchmark.py` | Measure the compute cost of one run — **unit 9** |
+| `python capstone_eval.py --label before` | Run the five capstone criteria, three trials — **unit 9** |
 
 ---
 
@@ -315,10 +336,14 @@ your write-up; that's the deliverable.
 | `audit.py` | The audit log writer. Given to you |
 | `run_attacks.py` | Runs the attack set — **unit 8** |
 | `run_eval.py` | Runs your criteria three times — **unit 8** |
-| `scenarios.py` | What your test runs. **You fill this in** |
-| `criteria.md` | Your five criteria. **You write all five** |
+| `scenarios.py` | What your unit 8 test runs |
+| `criteria.md` | Your five unit 8 criteria, plus the unit 9 capstone criteria |
+| `instrumentation.py` | Structured run log and metrics summary — **unit 9** |
+| `benchmark.py` | Measures per-run compute cost — **unit 9** |
+| `capstone_eval.py` | Runs the five capstone criteria three times — **unit 9** |
 | `logs/audit.jsonl` | Your audit log. **Commit it** |
-| `results/` | Attack runs and run logs. **Commit them** |
+| `logs/runs.jsonl` | Your structured run log. **Commit it** |
+| `results/` | Attack runs, run logs, capstone evidence. **Commit them** |
 
 ---
 

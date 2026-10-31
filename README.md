@@ -34,6 +34,8 @@
 
 <!-- ═══════════════════════ UNIT 9 — CAPSTONE ═════════════════════════ -->
 
+# Capstone (Unit 9) — Provenance Guard
+
 ## What This Extends
 
 This capstone extends **Provenance Guard**, the system I built in Units 7 and 8.
@@ -75,7 +77,237 @@ The extension was built and tested in one unit. It adds instrumentation, two
 read-only endpoints, a documented run path, and a benchmark script — nothing
 that requires retraining or redesigning the detector.
 
+## Running It
+
+**Path B — local with logs.** The system runs on this machine, started by
+`python app.py`, with the exact environment and setup commands in
+[RUNNING.md](RUNNING.md). It is not hosted because the detector loads about
+550 MB of GPT-2 weights into memory and a free host provides 512 MB.
+
+On this machine port 5000 was already held by another local service, so the
+committed evidence was produced with `$env:PORT=5055; python app.py` and every
+URL below uses `127.0.0.1:5055`. The default in `RUNNING.md` is still 5000.
+
+`logs/runs.jsonl` is the committed run record. `GET /runs` reads it back and
+`GET /metrics` summarizes it.
+
+## Instrumentation
+
+Every `/submit` and `/appeal` request writes one JSON object per line to
+`logs/runs.jsonl`. A decision record holds:
+
+| Field | What it records |
+|---|---|
+| `timestamp` | UTC ISO-8601 time, seconds |
+| `request_id` | unique id for this HTTP request |
+| `event` | `decision`, `rejected`, or `appeal` |
+| `endpoint` | `/submit` or `/appeal` |
+| `creator_id` | caller identifier, or `unknown` |
+| `input` | `chars`, `words`, `preview`, and (after the improvement) `sha256` |
+| `output` | `content_id`, `guess`, both signal scores, `combined_score`, `label` |
+| `duration_ms` | wall-clock milliseconds for the whole request |
+| `stages` | `validation_ms`, `model_ms`, `style_ms`, `combine_ms` |
+| `status` | `decided`, `rejected`, or `under_review` |
+| `error` | stable error code, or `null` on success |
+| `model` | after the improvement: model name, revision, torch/transformers versions, dtype, device |
+
+Rejections write the same record with `event="rejected"`, the error code in
+`error`, and the response explanation in `output`. The 429 handler writes one
+too, so a rate-limited request is never visible only as an absence.
+
+**Ten entries pasted from `logs/runs.jsonl`** (produced by `app.py::submit` and
+`capstone_eval.py::main`, after the improvement):
+
+```jsonl
+{"timestamp": "2026-10-31T05:46:23+00:00", "request_id": "d217d280-fa09-473a-9131-67cc0004d86d", "event": "decision", "endpoint": "/submit", "creator_id": "capstone_after_20261031_014606_c5_t2_c5_lightly edited AI", "input": {"chars": 249, "words": 44, "preview": "Many people are looking for ways to make their daily routines more efficient. A clear plan helps you stay focused, and i", "sha256": "d746ffcdb3332d32f98a466f59d51e9ac5772d406c805dfd7783d4193da3ba5f"}, "output": {"content_id": "4125fec8-9d59-420d-8ecb-660cfd30ba90", "guess": "ai", "model_score": 0.8293, "style_score": 0.5252, "combined_score": 0.67725, "label": "The combined scores fall in an AI-like range. This is not proof of AI authorship; independent review or relevant drafting context could change the result."}, "duration_ms": 74.622, "stages": {"validation_ms": 0.002, "model_ms": 74.398, "style_ms": 0.201, "combine_ms": 0.021}, "status": "decided", "error": null, "model": {"name": "gpt2", "revision": "607a30d783dfa663caf39e06633721c8d4cfcd7e", "torch": "2.14.1+cpu", "transformers": "4.57.6", "dtype": "torch.float32", "device": "cpu"}}
+{"timestamp": "2026-10-31T05:46:23+00:00", "request_id": "6029b3cf-858e-45ce-bbb2-54068f6955e1", "event": "decision", "endpoint": "/submit", "creator_id": "capstone_after_20261031_014606_c5_t2_c5_clearly AI", "input": {"chars": 393, "words": 52, "preview": "Artificial intelligence is transforming the way organizations operate. It enables businesses to automate repetitive task", "sha256": "e1a3b2157e5356a04aea24afbc2bc50c8862c79b5d59043a229b3429707b5aa2"}, "output": {"content_id": "c6cd6c40-b32c-43de-9761-b6069c88a8ee", "guess": "ai", "model_score": 0.8012, "style_score": 0.5626, "combined_score": 0.6819, "label": "The combined scores fall in an AI-like range. This is not proof of AI authorship; independent review or relevant drafting context could change the result."}, "duration_ms": 84.309, "stages": {"validation_ms": 0.002, "model_ms": 84.085, "style_ms": 0.2, "combine_ms": 0.022}, "status": "decided", "error": null, "model": {"name": "gpt2", "revision": "607a30d783dfa663caf39e06633721c8d4cfcd7e", "torch": "2.14.1+cpu", "transformers": "4.57.6", "dtype": "torch.float32", "device": "cpu"}}
+{"timestamp": "2026-10-31T05:46:23+00:00", "request_id": "a150c1c9-bbd5-452d-90f8-aa4ac0b1651e", "event": "decision", "endpoint": "/submit", "creator_id": "capstone_after_20261031_014606_c5_t3_c5_human-style control", "input": {"chars": 272, "words": 48, "preview": "Oh, what a morning! I missed the bus. Again. A cyclist splashed straight through a puddle; my coffee went flying, and so", "sha256": "60395c6c8afbd9e338c2357f21e746970ea080cfdc4128c0799e698a6d439f9a"}, "output": {"content_id": "4c7811f2-df91-4c36-8bd8-4d44c3f769f6", "guess": "unsure", "model_score": 0.3997, "style_score": 0.374, "combined_score": 0.38685, "label": "The signals do not support a clear authorship label. This is not an accusation; a fuller sample or independent review could change the result."}, "duration_ms": 84.304, "stages": {"validation_ms": 0.003, "model_ms": 84.076, "style_ms": 0.202, "combine_ms": 0.022}, "status": "decided", "error": null, "model": {"name": "gpt2", "revision": "607a30d783dfa663caf39e06633721c8d4cfcd7e", "torch": "2.14.1+cpu", "transformers": "4.57.6", "dtype": "torch.float32", "device": "cpu"}}
+{"timestamp": "2026-10-31T05:46:23+00:00", "request_id": "43d023bd-8cfd-4013-9f9d-33fb9f7a5117", "event": "decision", "endpoint": "/submit", "creator_id": "capstone_after_20261031_014606_c5_t3_c5_lightly edited AI", "input": {"chars": 249, "words": 44, "preview": "Many people are looking for ways to make their daily routines more efficient. A clear plan helps you stay focused, and i", "sha256": "d746ffcdb3332d32f98a466f59d51e9ac5772d406c805dfd7783d4193da3ba5f"}, "output": {"content_id": "b5f7691e-3fa3-44af-8e29-9433aa137ee0", "guess": "ai", "model_score": 0.8293, "style_score": 0.5252, "combined_score": 0.67725, "label": "The combined scores fall in an AI-like range. This is not proof of AI authorship; independent review or relevant drafting context could change the result."}, "duration_ms": 72.048, "stages": {"validation_ms": 0.002, "model_ms": 71.833, "style_ms": 0.191, "combine_ms": 0.022}, "status": "decided", "error": null, "model": {"name": "gpt2", "revision": "607a30d783dfa663caf39e06633721c8d4cfcd7e", "torch": "2.14.1+cpu", "transformers": "4.57.6", "dtype": "torch.float32", "device": "cpu"}}
+{"timestamp": "2026-10-31T05:46:23+00:00", "request_id": "45f125d3-0482-45a3-99de-19cf5169bc4d", "event": "decision", "endpoint": "/submit", "creator_id": "capstone_after_20261031_014606_c5_t3_c5_clearly AI", "input": {"chars": 393, "words": 52, "preview": "Artificial intelligence is transforming the way organizations operate. It enables businesses to automate repetitive task", "sha256": "e1a3b2157e5356a04aea24afbc2bc50c8862c79b5d59043a229b3429707b5aa2"}, "output": {"content_id": "29199d3a-7d42-4727-921e-40645ebd893a", "guess": "ai", "model_score": 0.8012, "style_score": 0.5626, "combined_score": 0.6819, "label": "The combined scores fall in an AI-like range. This is not proof of AI authorship; independent review or relevant drafting context could change the result."}, "duration_ms": 75.717, "stages": {"validation_ms": 0.003, "model_ms": 75.499, "style_ms": 0.192, "combine_ms": 0.023}, "status": "decided", "error": null, "model": {"name": "gpt2", "revision": "607a30d783dfa663caf39e06633721c8d4cfcd7e", "torch": "2.14.1+cpu", "transformers": "4.57.6", "dtype": "torch.float32", "device": "cpu"}}
+{"timestamp": "2026-10-31T05:46:21+00:00", "request_id": "602ee7e0-7eb5-4d7d-a9c9-d5d03fd071b8", "event": "rejected", "endpoint": "/submit", "creator_id": "capstone_after_20261031_014606_c3_t3_c3_flood", "input": {"chars": 272, "words": 48, "preview": "Oh, what a morning! I missed the bus. Again. A cyclist splashed straight through a puddle; my coffee went flying, and so"}, "output": {"error": "rate_limited", "limit": "10 per 1 minute"}, "duration_ms": 0.472, "stages": {"limiter_ms": 0.4723999882116914}, "status": "rejected", "error": "rate_limited"}
+{"timestamp": "2026-10-31T05:46:21+00:00", "request_id": "7134bbc3-5a1f-4403-91ad-859dcdcd54dc", "event": "rejected", "endpoint": "/submit", "creator_id": "capstone_after_20261031_014606_c3_t3_c3_missing", "input": {"chars": null, "words": null, "preview": null, "body_type": "dict"}, "output": {"error": "missing_text", "message": "No text provided."}, "duration_ms": 0.002, "stages": {"validation_ms": 0.002}, "status": "rejected", "error": "missing_text"}
+{"timestamp": "2026-10-31T05:46:21+00:00", "request_id": "2aef4d31-fdf1-44fd-aabe-cea6aa4a9f6f", "event": "rejected", "endpoint": "/submit", "creator_id": "unknown", "input": {"chars": null, "words": null, "preview": null, "body_type": "NoneType"}, "output": {"error": "invalid_json", "message": "Request body must be a JSON object."}, "duration_ms": 0.002, "stages": {"validation_ms": 0.002}, "status": "rejected", "error": "invalid_json"}
+{"timestamp": "2026-10-31T05:46:21+00:00", "request_id": "0517b186-b654-485f-b005-68067c3e020f", "event": "rejected", "endpoint": "/submit", "creator_id": "capstone_after_20261031_014606_c3_t3_c3_large", "input": {"chars": 12505, "words": 2501, "preview": "word word word word word word word word word word word word word word word word word word word word word word word word "}, "output": {"error": "text_too_large", "message": "Input exceeds the limit of 10,000 characters."}, "duration_ms": 0.008, "stages": {"validation_ms": 0.008}, "status": "rejected", "error": "text_too_large"}
+{"timestamp": "2026-10-31T05:46:22+00:00", "request_id": "e186e4e9-9123-4c31-84cc-e6c8bcf0032a", "event": "rejected", "endpoint": "/submit", "creator_id": "capstone_after_20261031_014606_c4_t3_c4_bad", "input": {"chars": 0, "words": 0, "preview": ""}, "output": {"error": "empty_text", "message": "Input is empty."}, "duration_ms": 0.002, "stages": {"validation_ms": 0.002}, "status": "rejected", "error": "empty_text"}
+```
+
+## What It Costs
+
+The real cost is **local CPU compute**, not API spend. `benchmark.py` sends one
+warm-up request (which loads the model once), then ten measured `/submit`
+requests, reads their `duration_ms` back from `GET /runs`, and writes
+`results/cost_<date>.md`.
+
+- Baseline measurement: **0.077 s of compute per warm run** (median 76 ms,
+  fastest 72 ms, slowest 84 ms over ten runs).
+- After the improvement: **0.073 s per warm run** (median 73 ms, fastest 70 ms,
+  slowest 78 ms).
+- API spend: **$0.00 per run** — the model runs locally and no hosted API is
+  called.
+- Cold start: the first request after a restart took **6.31 s** while GPT-2
+  loaded. That is a one-time startup cost, not a per-run cost.
+
+**Hundred-a-day arithmetic:** at 0.073 s per run, `100 × 0.073 = 7.3 s` of
+compute per day, or about 0.12 minutes (0.002 hours). If the process restarts
+once that day, add one 6.31 s cold start, for about 13.6 s total. API spend
+remains $0.00.
+
+## Run Log and Verdicts
+
+`capstone_eval.py --label before` ran the five criteria three times each.
+Complete evidence:
+[`results/capstone_before_20261031_014442.md`](./results/capstone_before_20261031_014442.md)
+and
+[`results/capstone_before_20261031_014442.json`](./results/capstone_before_20261031_014442.json).
+
+| Criterion | Target | Run 1 | Run 2 | Run 3 | Verdict |
+|---|---|---|---|---|---|
+| 1. Structured log completeness | 10/10 complete records | 10/10 | 10/10 | 10/10 | **MET** |
+| 2. Warm latency | 9/10 under 5,000 ms | 10/10 (max 110.5 ms) | 10/10 (max 99.3 ms) | 10/10 (max 116.2 ms) | **MET** |
+| 3. Failure observability | 5/5 failures 4xx/503 and logged | 5/5 | 5/5 | 5/5 | **MET** |
+| 4. Metrics accuracy | exact counts; average within 0.001 s | counts exact; Δ 0.000042 s | counts exact; Δ 0.000027 s | counts exact; Δ 0.000045 s | **MET** |
+| 5. Regression and label coverage | 3/3 shape; all three labels | 3/3 shape, 2 labels | 3/3 shape, 2 labels | 3/3 shape, 2 labels | **MISSED** |
+
+Only criterion 5 is missed, so it is the only one with a diagnosis.
+
+**Real output for each criterion** — from `results/capstone_before_20261031_014442.md`,
+produced by `capstone_eval.py::main`, trial 1 unless noted.
+
+Criterion 1 — completeness summary and one checked record:
+
+```json
+{"trial": 1, "expected": 10, "found": 10, "complete": 10, "pass": true}
+{"request_id": "5a3f8980-f4df-455d-8484-6bbebf79cdf1", "creator_id": "capstone_before_20261031_014430_c1_t1_c1_1", "complete": true, "missing": []}
+```
+
+Criterion 2 — ten client-side end-to-end latencies, all under 5,000 ms:
+
+```json
+{"trial": 1, "under_5000": 10, "latencies_ms": [86.178, 93.204, 88.526, 92.326, 85.23, 88.374, 85.06, 110.477, 90.633, 94.803], "median_ms": 89.579, "max_ms": 110.477, "pass": true}
+```
+
+Criterion 3 — every deliberate failure returned 4xx and was logged:
+
+```json
+{"trial": 1, "passed": 5, "checks": [
+  {"case": "rate_limited", "status": 429, "status_ok": true, "logged": true, "log_error": "rate_limited", "log_request_id": "cdf02bfd-3e45-4394-ac5a-3d1f2e773bde", "log_duration_ms": 1.143},
+  {"case": "missing_text", "status": 400, "status_ok": true, "logged": true, "log_error": "missing_text", "log_request_id": "f6ae8e65-6d17-4c38-9342-1c2582ecf293", "log_duration_ms": 0.002},
+  {"case": "empty_text", "status": 400, "status_ok": true, "logged": true, "log_error": "empty_text", "log_request_id": "e2052467-6f5e-4d9f-80bb-c12f1bba8eb1", "log_duration_ms": 0.002},
+  {"case": "invalid_json", "status": 400, "status_ok": true, "logged": true, "log_error": "invalid_json", "log_request_id": "c36d5034-1ca1-4edf-9634-d10e77a8e522", "log_duration_ms": 0.001},
+  {"case": "text_too_large", "status": 400, "status_ok": true, "logged": true, "log_error": "text_too_large", "log_request_id": "e9fbc031-946e-436f-902c-03f11dd601e7", "log_duration_ms": 0.007}
+]}
+```
+
+Criterion 4 — `/metrics` agrees with `/runs`:
+
+```json
+{"trial": 1, "metrics": {"total_runs": 135, "decisions": 119, "rejections": 16, "compute_seconds_per_decision": 0.1363}, "run_counts": {"total_runs": 135, "decisions": 119, "rejections": 16}, "reported_average_seconds": 0.1363, "expected_average_seconds": 0.136258, "average_delta_seconds": 4.2e-05, "pass": true}
+```
+
+Criterion 5 — all six fields present, but only two labels:
+
+```json
+{"trial": 1, "rows": [
+  {"input": "human-style control", "status": 200, "guess": "unsure", "model_score": 0.3997, "style_score": 0.374, "combined_score": 0.38685},
+  {"input": "lightly edited AI", "status": 200, "guess": "ai", "model_score": 0.8293, "style_score": 0.5252, "combined_score": 0.67725},
+  {"input": "clearly AI", "status": 200, "guess": "ai", "model_score": 0.8012, "style_score": 0.5626, "combined_score": 0.6819}
+], "labels_seen": ["ai", "unsure"], "shape_ok": true, "coverage_ok": false, "pass": false}
+```
+
+**Diagnosis of the miss — criterion 5.** Stage: `detector.model_signal` feeding
+`scoring.combine_signals`, then `scoring.score_to_label`. Mechanism: the
+human-style control scored `0.3997` on the model signal, not the `0.3209`
+recorded in the Unit 7 README. Its style score was `0.374`, so the equal-weight
+average was `0.38685` — `0.03685` above `HUMAN_THRESHOLD = 0.35`. The label
+mapper therefore returned `unsure`. The two AI texts both returned `ai`, so the
+trial saw only two of the three labels. Every response had all six fields and
+HTTP 200, so this is not an instrumentation or route regression; it is a
+calibration-boundary miss. The pattern is a single miss at the model-signal
+boundary, not three separate failures.
+
+## The Improvement
+
+**What I changed:** Added `detector.model_metadata()` and recorded it, plus an
+input SHA-256, on every successful decision. Each record now names the model
+(`gpt2`), the exact model revision
+(`607a30d783dfa663caf39e06633721c8d4cfcd7e`), `torch` and `transformers`
+versions, dtype, and device. Signal calculations, weights, thresholds, routes,
+and response fields did not change.
+
+**Which diagnosis pointed at it:** Criterion 5's miss could not be attributed:
+the score was `0.3997` where the Unit 7 README recorded `0.3209`, but the log
+did not say which model revision or library versions produced either number. A
+future run can now be matched to the exact environment, and the input SHA-256
+identifies the text that produced a score.
+
+### After the improvement — same five criteria, three trials
+
+Complete evidence:
+[`results/capstone_after_20261031_014623.md`](./results/capstone_after_20261031_014623.md)
+and
+[`results/capstone_after_20261031_014623.json`](./results/capstone_after_20261031_014623.json).
+
+| Criterion | Before (T1 / T2 / T3) | After (T1 / T2 / T3) | Before verdict | After verdict |
+|---|---|---|---|---|
+| 1. Log completeness | 10/10 / 10/10 / 10/10 | 10/10 / 10/10 / 10/10 | MET | MET |
+| 2. Warm latency | 10/10 / 10/10 / 10/10 under 5s | 10/10 / 10/10 / 10/10 under 5s | MET | MET |
+| 3. Failure observability | 5/5 / 5/5 / 5/5 | 5/5 / 5/5 / 5/5 | MET | MET |
+| 4. Metrics accuracy | exact / exact / exact (Δ ≤ 4.5e-5 s) | exact / exact / exact (Δ ≤ 3.5e-5 s) | MET | MET |
+| 5. Regression and labels | 3/3 shape, 2 labels each | 3/3 shape, 2 labels each | MISSED | MISSED |
+
+The after run used
+[`results/cost_20261031_014632_capstone-after.md`](./results/cost_20261031_014632_capstone-after.md):
+0.073 s per warm run versus 0.077 s before, so the added fingerprint did not
+make a measurable cost difference.
+
+**Did it help, and how do I know:** It did **not** change criterion 5's verdict
+or any score — the human-style control still returns `0.3997 / 0.374 / 0.38685`
+and `unsure`. It helped the diagnosis, not the behaviour: the after log now
+names the exact model revision and runtime that produced the score, so the
+calibration drift can be investigated instead of guessed at. The trade is a
+slightly larger record (the `model` object and input hash), which did not show
+up in the measured per-run latency.
+
+## What's Still Broken
+
+**Criterion 5 — human-label coverage (still missed).** The system's label bands
+are reachable in principle, but these three calibration texts produce only
+`unsure` and `ai` in this runtime. What I would do: re-measure the three
+calibration texts on the exact target runtime, store the model fingerprint and
+the resulting scores as the reference, then decide whether the model signal's
+perplexity midpoint or the `HUMAN_THRESHOLD` needs recalibration. I stopped
+because threshold/midpoint recalibration was explicitly out of scope for this
+unit, and changing the calibration inputs would be changing the test rather
+than fixing the system.
+
+**The one thing I would do first if this were real and I had another unit:**
+capture a controlled calibration run on the deployment machine and compare it
+with the Unit 7 table, using the new fingerprint to separate environment drift
+from a code change. That one measurement decides whether the fix belongs in the
+detector's midpoint, the label threshold, or the documented calibration set;
+without it, any of those changes would be a guess. The clean-checkout test
+already found one concrete source of drift: a fresh install resolved
+`torch 2.15.0+cpu` while the evidence environment runs `torch 2.14.1+cpu`
+because `requirements.txt` bounds torch without pinning the exact build.
+
+## How I Used AI (capstone)
+
+**Moment 1 — criteria review.** I asked AI to review the five drafted criteria
+as if it could not ask me what I meant. It flagged that criterion 5 required all
+three labels from three specific calibration texts and could fail if two of
+them landed in the same band. I kept the criterion because it was the honest
+regression check, and the first run then missed it exactly that way. I did not
+let the model rewrite the target.
+
+**Moment 2 — cost measurement.** I asked AI to inspect the first cost report
+against the run log. It noticed the report averaged eleven rows, including the
+warm-up, so the 6.3 s model load was being counted as a per-run cost. I changed
+`benchmark.py` to exclude the warm-up creator, re-ran ten measured requests,
+and used the corrected 0.077 s figure.
+
 <!-- ═══════════════════════ UNIT 7 — THE BUILD ═══════════════════════ -->
+
+# Previous units — Provenance Guard (Units 7–8)
 
 ## What This Does
 
