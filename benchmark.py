@@ -70,6 +70,7 @@ def main():
     measured = [
         entry for entry in runs
         if str(entry.get("creator_id", "")).startswith(prefix)
+        and entry.get("creator_id") != f"{prefix}_warmup"
         and entry.get("event") == "decision"
     ]
     if len(measured) < args.runs:
