@@ -141,6 +141,36 @@ def warm_up() -> str:
     return f"{config.DETECTOR_MODEL} loaded and ready."
 
 
+def model_metadata() -> dict:
+    """
+    Fingerprint the exact model and runtime that produced a score.
+
+    A model signal is only reproducible if the log says which model revision
+    and which torch/transformers versions produced it. Without this, a score
+    that does not match a documented calibration value cannot be attributed to
+    a code change, a model revision, or a library update after the fact.
+    """
+    try:
+        import torch
+        import transformers
+
+        model, _ = _load()
+        parameter = next(model.parameters())
+        return {
+            "name": config.DETECTOR_MODEL,
+            "revision": getattr(getattr(model, "config", None), "_commit_hash", None),
+            "torch": torch.__version__,
+            "transformers": transformers.__version__,
+            "dtype": str(parameter.dtype),
+            "device": str(parameter.device),
+        }
+    except Exception as exc:  # noqa: BLE001
+        return {
+            "name": config.DETECTOR_MODEL,
+            "unavailable": f"{type(exc).__name__}: {exc}",
+        }
+
+
 if __name__ == "__main__":
     import sys
 

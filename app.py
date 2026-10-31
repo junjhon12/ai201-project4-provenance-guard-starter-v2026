@@ -24,6 +24,7 @@ Routes:
     GET  /health      is the service up, and is the model loaded
 """
 
+import hashlib
 import time
 import uuid
 
@@ -343,6 +344,9 @@ def submit():
         "combined_score": combined_score,
         "label": label,
     }
+    input_summary = _input_summary(payload, text)
+    input_summary["sha256"] = hashlib.sha256(text.encode("utf-8")).hexdigest()
+    model_info = detector.model_metadata()
 
     audit.log_decision(
         content_id=content_id,
@@ -356,18 +360,20 @@ def submit():
         request_id=request_id,
         duration_ms=round(duration_ms, 3),
         stages=stages,
+        model_revision=model_info.get("revision"),
     )
     instrumentation.record_run(
         request_id=request_id,
         event="decision",
         endpoint="/submit",
         creator_id=creator_id,
-        input=_input_summary(payload, text),
+        input=input_summary,
         output=output,
         duration_ms=duration_ms,
         stages=stages,
         status="decided",
         error=None,
+        model=model_info,
     )
     return jsonify({
         "content_id": content_id,
