@@ -105,4 +105,5 @@ RATE_LIMIT_STORAGE = "memory://"
 
 LOG_DIR = ROOT / "logs"
 AUDIT_LOG = LOG_DIR / "audit.jsonl"
+RUN_LOG = LOG_DIR / "runs.jsonl"
 RESULTS_DIR = ROOT / "results"
