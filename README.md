@@ -32,6 +32,49 @@
      a picture of your terminal gets none.
      ───────────────────────────────────────────────────────────────────────── -->
 
+<!-- ═══════════════════════ UNIT 9 — CAPSTONE ═════════════════════════ -->
+
+## What This Extends
+
+This capstone extends **Provenance Guard**, the system I built in Units 7 and 8.
+It is the same repository and the same service: a Flask web service that scores
+submitted text with a local GPT-2 model signal and a stylometry signal, combines
+them, returns a reader-facing label, records decisions in an audit log, accepts
+appeals, and rate-limits `/submit`.
+
+**What is new in this unit:** an operational layer around the existing service.
+Every request now writes a structured run record with a request id, input shape,
+output shape, total duration, per-stage timings, and status — including rejected
+requests. Two read-only observability endpoints (`GET /runs` and `GET /metrics`)
+expose those records without changing code. The run path is documented for a
+clean checkout, and one run's cost is measured in seconds of local compute
+rather than estimated from a pricing page.
+
+## The Shape
+
+**Shape A — Deploy and instrument.** The extension is the operational layer: a
+reproducible local run path plus instrumentation that makes the running system
+observable after the fact. I chose Path B (local with logs) because the detector
+loads ~550 MB of GPT-2 weights into memory; the free hosting tier provides
+512 MB, so a hosted deployment would be killed before its first request. Path B
+is the documented answer for this system, not a fallback.
+
+**Out of scope (decided in Milestone 1):**
+
+- **No new detection signal or retriever.** The model signal and style signal
+  stay as they are; I am not adding a third signal or replacing GPT-2.
+- **No threshold recalibration.** The `HUMAN_THRESHOLD` / `AI_THRESHOLD` values
+  and the 0.5/0.5 weights stay unchanged; this unit is about observing the
+  system, not re-tuning its decisions.
+- **No hosted deployment or web interface.** A free host cannot hold the model,
+  and the existing JSON API is the interface under test.
+- **No changes to the audit log's append-only decision record.** The new run log
+  is separate evidence; the audit log keeps its existing shape.
+
+The extension was built and tested in one unit. It adds instrumentation, two
+read-only endpoints, a documented run path, and a benchmark script — nothing
+that requires retraining or redesigning the detector.
+
 <!-- ═══════════════════════ UNIT 7 — THE BUILD ═══════════════════════ -->
 
 ## What This Does
